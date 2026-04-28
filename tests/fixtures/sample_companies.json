@@ -1,0 +1,30 @@
+[
+  {
+    "_comment": "Gold-standard test fixtures for Houston presence scoring.",
+    "_note": "Expected values populated from gold-standard companies in docs/houston_presence_signals.md (to be provided in Step 3). Placeholder entries below will be replaced.",
+    "name": "PLACEHOLDER — Tier A Company",
+    "expected_tier": "A",
+    "expected_min_points": 6,
+    "signals": {
+      "form_d_address": "1234 Main St, Houston, TX 77002",
+      "accelerator_houston": "Greentown Houston",
+      "website_houston_office": true,
+      "job_postings_houston": 5
+    }
+  },
+  {
+    "name": "PLACEHOLDER — Tier B Company",
+    "expected_tier": "B",
+    "expected_min_points": 3,
+    "signals": {
+      "website_houston_office": true,
+      "job_postings_houston": 2
+    }
+  },
+  {
+    "name": "PLACEHOLDER — Tier C Company",
+    "expected_tier": "C",
+    "expected_min_points": 0,
+    "signals": {}
+  }
+]

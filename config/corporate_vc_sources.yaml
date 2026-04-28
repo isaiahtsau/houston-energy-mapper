@@ -1,0 +1,58 @@
+# Corporate VC portfolio sources for the Houston energy ecosystem.
+#
+# This file drives harvest/corporate_vc.py — a generic harvester that reads
+# this config and scrapes each entry. Add new VCs here rather than writing
+# new Python code.
+#
+# Fields:
+#   name:           Display name for logs and the source_ids column
+#   portfolio_url:  URL of the public portfolio/investments page
+#   scrape_method:  "static" (requests+BS4) or "headless" (Playwright)
+#   entry_selector: CSS selector for individual company/investment entries
+#                   (null = page requires custom extraction; handled via extract_fn)
+#   extract_fn:     Optional Python function name in harvest/corporate_vc.py for
+#                   custom extraction logic when a generic selector won't suffice
+#   notes:          Parsing hints, known blockers, last verified date
+
+sources:
+  - name: "Chevron Technology Ventures"
+    portfolio_url: "https://www.chevron.com/technology/chevron-technology-ventures"
+    scrape_method: "static"
+    entry_selector: null
+    extract_fn: "extract_chevron_tv"
+    notes: "Portfolio listed as text/prose — no structured list. Requires custom extraction."
+
+  - name: "Shell Ventures"
+    portfolio_url: "https://www.shellventures.com/portfolio/"
+    scrape_method: "static"
+    entry_selector: ".portfolio-company"
+    extract_fn: null
+    notes: "Grid layout with company cards. Verified 2025-01."
+
+  - name: "Baker Hughes Ventures"
+    portfolio_url: "https://www.bakerhughes.com/innovation/venturing"
+    scrape_method: "static"
+    entry_selector: null
+    extract_fn: "extract_baker_hughes"
+    notes: "Investments described in press releases — requires custom extraction."
+
+  - name: "S&P Global Energy Ventures"
+    portfolio_url: "https://www.spglobal.com/en/research-insights/featured/special-editorial/look-forward/energy-transition-opportunities"
+    scrape_method: "static"
+    entry_selector: null
+    extract_fn: "extract_spglobal"
+    notes: "Ventures page not structured — infer from press mentions."
+
+  - name: "Equinor Ventures"
+    portfolio_url: "https://www.equinor.com/en/how-and-why/ventures.html"
+    scrape_method: "headless"
+    entry_selector: null
+    extract_fn: "extract_equinor"
+    notes: "JS-rendered. Portfolio companies in dynamic grid."
+
+  - name: "bp Ventures"
+    portfolio_url: "https://www.bp.com/en/global/corporate/what-we-do/ventures.html"
+    scrape_method: "headless"
+    entry_selector: null
+    extract_fn: "extract_bp_ventures"
+    notes: "JS-rendered portfolio page."
