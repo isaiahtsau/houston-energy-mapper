@@ -1,0 +1,202 @@
+[
+  {
+    "case_id": "TC-01_houston_hq_strong",
+    "description": "Houston-HQ with Form D + Greentown residency. Strongest Tier A signal.",
+    "evidence": {
+      "is_houston_hq": true,
+      "form_d_address": "1234 Main St, Houston, TX 77002",
+      "form_d_filed_by_law_firm": false,
+      "accelerator_membership": "Greentown Houston",
+      "accelerator_physical": true
+    },
+    "expected": {
+      "tier": "A",
+      "total_points_min": 6,
+      "high_operational_count_min": 2,
+      "signals_required": ["form_d_houston_address", "houston_accelerator_residency"],
+      "confidence": "HIGH",
+      "review_queue": false
+    }
+  },
+  {
+    "case_id": "TC-02_tier_b_high_pilot_plus_accelerator",
+    "description": "Boston-HQ company with Halliburton Labs cohort + signed pilot at Phillips 66 Houston refinery.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "Boston, MA",
+      "accelerator_membership": "Halliburton Labs",
+      "accelerator_physical": true,
+      "paid_pilot": {
+        "partner": "Phillips 66",
+        "site_named": "Sweeny Refinery, Houston metro",
+        "language": "executed paid pilot"
+      }
+    },
+    "expected": {
+      "tier": "B-high",
+      "total_points_min": 5,
+      "high_operational_count_min": 1,
+      "signals_required": ["houston_accelerator_residency", "paid_pilot_houston_major"],
+      "confidence": "HIGH",
+      "review_queue": false
+    }
+  },
+  {
+    "case_id": "TC-03_tier_b_co_investor_plus_jobs",
+    "description": "Denver-HQ company with Mercury Fund as co-investor and 4 Houston job postings — clean Tier B.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "Denver, CO",
+      "investors": ["Mercury Fund", "DCVC", "Lowercarbon Capital"],
+      "houston_job_count": 4
+    },
+    "expected": {
+      "tier": "B",
+      "total_points_min": 4,
+      "total_points_max": 5,
+      "high_operational_count_min": 0,
+      "signals_required": ["houston_co_investor", "houston_job_postings_substantive"],
+      "confidence": "MEDIUM",
+      "review_queue": false
+    }
+  },
+  {
+    "case_id": "TC-04_tier_b_low_pr_only",
+    "description": "Press release tour only — Houston-dateline announcement of MOU with OXY, no operational corroboration.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "San Francisco, CA",
+      "press_releases": [
+        {
+          "dateline": "Houston, TX",
+          "language": "MOU to explore CCS partnership with OXY",
+          "is_mou_loi_only": true
+        }
+      ]
+    },
+    "expected": {
+      "tier": "B-low",
+      "total_points_max": 2,
+      "high_operational_count": 0,
+      "signals_required": ["houston_dateline_press_release"],
+      "false_positive_flags_required": ["mou_loi_partnership"],
+      "confidence": "LOW",
+      "review_queue": true
+    }
+  },
+  {
+    "case_id": "TC-05_tier_c_no_signals",
+    "description": "Boston-HQ fusion startup, sector-fit but no Houston signals at all.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "Cambridge, MA",
+      "sector": "Fusion",
+      "investors": ["Khosla", "Founders Fund"],
+      "houston_signals": []
+    },
+    "expected": {
+      "tier": "C",
+      "total_points_max": 0,
+      "high_operational_count": 0,
+      "signals_matched_count": 0,
+      "confidence": "HIGH",
+      "review_queue": false,
+      "notes_should_contain": "Tier C — no current Houston presence, sector-fit recruiting candidate"
+    }
+  },
+  {
+    "case_id": "TC-06_form_d_law_firm_false_positive",
+    "description": "Form D filed by Vinson & Elkins at 910 Louisiana, Houston — looks like Houston address but is the law firm's address. Must be downgraded.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "Atlanta, GA",
+      "form_d_address": "910 Louisiana St, Houston, TX 77002",
+      "form_d_filed_by_law_firm": true,
+      "form_d_law_firm": "Vinson & Elkins LLP"
+    },
+    "expected": {
+      "tier_max": "B-low",
+      "false_positive_flags_required": ["form_d_law_firm_address"],
+      "signals_should_not_include": ["form_d_houston_address"],
+      "review_queue": true
+    }
+  },
+  {
+    "case_id": "TC-07_only_low_signals_routes_to_review",
+    "description": "Five LOW signals total 5 points — but no operational signal present, so routes to B-low review queue regardless of point total.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "Chicago, IL",
+      "press_releases": [{"dateline": "Houston, TX", "language": "general announcement"}],
+      "texas_sos_foreign": true,
+      "founder_alumni": ["Rice University"],
+      "single_houston_job_posting": true,
+      "event_speaking_slots": [{"event": "CERAWeek 2025"}]
+    },
+    "expected": {
+      "tier": "B-low",
+      "total_points_min": 4,
+      "high_operational_count": 0,
+      "only_low_signals": true,
+      "confidence": "LOW",
+      "review_queue": true
+    }
+  },
+  {
+    "case_id": "TC-08_houston_hq_weak_corroboration",
+    "description": "Company claims Houston HQ via Texas SOS but only one corroborating signal — A-low review.",
+    "evidence": {
+      "is_houston_hq": true,
+      "texas_sos_county": "Harris",
+      "founder_linkedin_houston": true
+    },
+    "expected": {
+      "tier": "A-low",
+      "total_points_min": 5,
+      "high_operational_count_min": 1,
+      "review_queue": true
+    }
+  },
+  {
+    "case_id": "TC-09_doe_oced_sub_awardee_high",
+    "description": "DOE OCED HyVelocity Hub sub-awardee with named Texas project location — strongest single non-HQ signal for Tier B.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "Pittsburgh, PA",
+      "doe_oced_hub": {
+        "hub": "HyVelocity Gulf Coast",
+        "role": "off-taker",
+        "project_location": "La Porte, TX"
+      },
+      "founder_linkedin_houston": false
+    },
+    "expected": {
+      "tier_min": "B",
+      "total_points_min": 3,
+      "high_operational_count_min": 1,
+      "signals_required": ["doe_oced_hub_sub_awardee"],
+      "confidence": "MEDIUM"
+    }
+  },
+  {
+    "case_id": "TC-10_ercot_ia_signed_houston_zone_high",
+    "description": "ERCOT generator interconnection IA-signed at Houston load zone with developer matching the company — strong Tier B-high.",
+    "evidence": {
+      "is_houston_hq": false,
+      "hq_city": "Austin, TX",
+      "ercot_interconnection": {
+        "milestone": "IA-signed",
+        "load_zone": "Houston",
+        "developer_matches_company": true
+      },
+      "investors": ["Energy Capital Ventures"]
+    },
+    "expected": {
+      "tier": "B-high",
+      "total_points_min": 5,
+      "high_operational_count_min": 1,
+      "signals_required": ["ercot_ia_signed_houston_zone", "houston_co_investor"],
+      "confidence": "HIGH"
+    }
+  }
+]
