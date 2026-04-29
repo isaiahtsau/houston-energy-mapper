@@ -1,0 +1,143 @@
+[
+  {
+    "case_id": "VS-TC-01_pf_debt_only_excluded",
+    "description": "Hydrogen developer announces $300M raise — round type is PF-Debt with no equity component.",
+    "evidence": {
+      "name": "COMPANY_HX_A",
+      "description": "Building a 200 MW green hydrogen production facility on the Gulf Coast.",
+      "most_recent_round": {
+        "round_type": "PF-Debt",
+        "amount_usd": 300000000,
+        "language": "non-recourse project debt facility for the Gulf Coast hydrogen plant"
+      },
+      "patents": [],
+      "investors": []
+    },
+    "expected": {
+      "excluded": true,
+      "rule_id": "HX-01",
+      "reason_should_contain": "PF-Debt"
+    }
+  },
+  {
+    "case_id": "VS-TC-02_pure_services_excluded",
+    "description": "Houston engineering services firm with no IP, no grants, no CVC. Pure services revenue.",
+    "evidence": {
+      "name": "COMPANY_HX_B",
+      "description": "Reservoir engineering consulting for upstream operators.",
+      "primary_business": "consulting",
+      "patents": [],
+      "federal_grants": [],
+      "investors": []
+    },
+    "expected": {
+      "excluded": true,
+      "rule_id": "HX-02",
+      "reason_should_contain": "services"
+    }
+  },
+  {
+    "case_id": "VS-TC-03_consulting_with_arpa_e_NOT_excluded",
+    "description": "Company appears services-y but has ARPA-E grant — does not trip HX-02 because grant is present.",
+    "evidence": {
+      "name": "COMPANY_HX_C",
+      "description": "Energy systems engineering with novel modeling approach.",
+      "primary_business": "consulting",
+      "patents": [],
+      "federal_grants": [{"program": "ARPA-E", "phase": "Phase II"}],
+      "investors": []
+    },
+    "expected": {
+      "excluded": false,
+      "rule_id": null
+    }
+  },
+  {
+    "case_id": "VS-TC-04_project_spv_excluded",
+    "description": "Single-asset SPV named in a DOE OCED hub award.",
+    "evidence": {
+      "name": "Bayou Hydrogen LLC",
+      "entity_type": "LLC",
+      "description": "Special purpose vehicle for the Bayou Hydrogen Production Facility, a 50 MW PEM electrolyzer plant.",
+      "doe_oced_hub": {"hub": "HyVelocity Gulf Coast", "role": "project participant"},
+      "form_d": {"use_of_proceeds": "Bayou Hydrogen Production Facility"},
+      "technology_vendor_identity": null
+    },
+    "expected": {
+      "excluded": true,
+      "rule_id": "HX-03",
+      "reason_should_contain": "SPV"
+    }
+  },
+  {
+    "case_id": "VS-TC-05_patent_troll_excluded",
+    "description": "3-employee IP-licensing entity, no product, no customers.",
+    "evidence": {
+      "name": "COMPANY_HX_E",
+      "description": "Patent licensing and IP monetization for clean energy technologies.",
+      "employee_count": 3,
+      "business_model": "IP licensing",
+      "products": [],
+      "customers": []
+    },
+    "expected": {
+      "excluded": true,
+      "rule_id": "HX-04",
+      "reason_should_contain": "patent"
+    }
+  },
+  {
+    "case_id": "VS-TC-06_major_subsidiary_excluded",
+    "description": "1PointFive as wholly-owned OXY subsidiary.",
+    "evidence": {
+      "name": "1PointFive",
+      "description": "Wholly-owned subsidiary of Occidental Petroleum (OXY) focused on direct air capture.",
+      "parent_organization": "OXY",
+      "is_subsidiary": true
+    },
+    "expected": {
+      "excluded": true,
+      "rule_id": "HX-05",
+      "reason_should_contain": "subsidiary"
+    }
+  },
+  {
+    "case_id": "VS-TC-07_legitimate_passes_to_classifier",
+    "description": "Strong venture-scale candidate — passes all hard-exclude rules and routes to LLM classifier.",
+    "evidence": {
+      "name": "COMPANY_HX_G",
+      "description": "Plasmonic photocatalysis for ammonia synthesis at low temperature, licensed from Rice University Halas Lab.",
+      "employee_count": 47,
+      "patents": [
+        {"cpc": "Y02E", "status": "issued", "count": 4},
+        {"cpc": "Y02P", "status": "filed", "count": 2}
+      ],
+      "federal_grants": [{"program": "ARPA-E", "phase": "SCALEUP"}],
+      "investors": ["Mercury Fund", "Goose Capital", "Energy Capital Ventures"],
+      "most_recent_round": {"round_type": "Series B", "amount_usd": 45000000}
+    },
+    "expected": {
+      "excluded": false,
+      "rule_id": null,
+      "should_route_to_classifier": true
+    }
+  },
+  {
+    "case_id": "VS-TC-08_borderline_spv_routes_to_classifier",
+    "description": "Entity name has LLC and DOE hub mention, but also has separate technology vendor identity and team — does NOT auto-exclude; routes to classifier with SPV pattern flagged.",
+    "evidence": {
+      "name": "COMPANY_HX_H Holdings LLC",
+      "entity_type": "LLC",
+      "description": "Develops modular electrolyzer technology; deployed first 5 MW unit in HyVelocity hub.",
+      "doe_oced_hub": {"hub": "HyVelocity Gulf Coast", "role": "technology provider"},
+      "technology_vendor_identity": "COMPANY_HX_H",
+      "employee_count": 28,
+      "patents": [{"cpc": "Y02E", "status": "issued", "count": 3}]
+    },
+    "expected": {
+      "excluded": false,
+      "rule_id": null,
+      "should_route_to_classifier": true
+    }
+  }
+]

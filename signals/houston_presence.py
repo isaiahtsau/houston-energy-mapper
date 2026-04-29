@@ -6,113 +6,29 @@ based on a composite signal score. Every assignment includes a per-signal trace 
 full auditability.
 
 Score is deterministic — no LLM calls in this module.
+
+CompanyRecord and all shared constants are imported from models.py.
 """
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-HOUSTON_ZIP_WHITELIST: frozenset[str] = frozenset(
-    [f"{z:05d}" for z in range(77002, 77100)]    # Harris core
-    + [f"{z:05d}" for z in range(77478, 77499)]  # Sugar Land
-    + [f"{z:05d}" for z in range(77581, 77585)]  # Pearland
-    + [f"{z:05d}" for z in range(77380, 77390)]  # The Woodlands
-    + [f"{z:05d}" for z in range(77501, 77521)]  # Pasadena/Baytown
-    + [f"{z:05d}" for z in range(77449, 77495)]  # Katy
+from models import (
+    HOUSTON_ACCELERATORS,
+    HOUSTON_CO_INVESTOR_WHITELIST,
+    HOUSTON_COUNTIES,
+    HOUSTON_MAJORS,
+    HOUSTON_UNIVERSITIES,
+    HOUSTON_ZIP_WHITELIST,
+    HIGH_OPERATIONAL_SIGNAL_IDS,
+    TIER_RANK,
+    CompanyRecord,
 )
 
-HOUSTON_COUNTIES: frozenset[str] = frozenset({
-    "Harris", "Fort Bend", "Montgomery", "Brazoria", "Galveston", "Waller",
-})
-
-HOUSTON_ACCELERATORS: frozenset[str] = frozenset({
-    "Greentown Houston", "Activate Houston", "Halliburton Labs", "Ion",
-})
-
-HOUSTON_CO_INVESTOR_WHITELIST: frozenset[str] = frozenset({
-    "Mercury Fund",
-    "Goose Capital",
-    "Energy Capital Ventures",
-    "Cottonwood Venture Partners",
-    "Veriten",
-    "Artemis",
-    "Houston Angel Network",
-    "Texas HALO Fund",
-    "HX Venture Fund",
-    "Energy Transition Ventures",
-    "Genesis Park",
-    "Post Oak Energy Capital",
-})
-
-HOUSTON_MAJORS: frozenset[str] = frozenset({
-    "ExxonMobil", "ConocoPhillips", "Phillips 66", "OXY", "Halliburton",
-    "Baker Hughes", "SLB", "Chevron", "NRG", "CenterPoint", "Cheniere",
-    "Williams", "Kinder Morgan", "EOG", "Enterprise Products",
-})
-
-HOUSTON_UNIVERSITIES: frozenset[str] = frozenset({
-    "Rice", "Rice University",
-    "UH", "University of Houston",
-    "A&M", "Texas A&M",
-    "UT-Austin", "UT Austin",
-})
-
-# HIGH signals that count toward high_operational_count (per spec §Tier assignment rules)
-HIGH_OPERATIONAL_SIGNAL_IDS: frozenset[str] = frozenset({
-    "form_d_houston_address",
-    "texas_sos_houston_county_formation",
-    "ercot_ia_signed_houston_zone",
-    "houston_accelerator_residency",
-    "doe_oced_hub_sub_awardee",
-    "port_houston_lease",
-    "form_5500_houston_sponsor",
-})
-
-# Canonical tier ordering for tier_min / tier_max assertions
-TIER_RANK: dict[str, int] = {
-    "C": 0, "B-low": 1, "B": 2, "B-high": 3, "A-low": 4, "A": 5,
-}
-
 # ---------------------------------------------------------------------------
-# Data classes
+# Output data classes (presence-specific — live here, not in models.py)
 # ---------------------------------------------------------------------------
-
-
-@dataclass
-class CompanyRecord:
-    """Input to score_houston_presence(). Missing fields default to None / []."""
-
-    company_id: str
-    name: str
-    canonical_domain: str | None = None
-    is_houston_hq: bool | None = None       # None = unknown → review queue
-    hq_city: str | None = None
-    hq_state: str | None = None
-    form_d: dict | None = None              # {address, zip, filed_by_law_firm, law_firm_name}
-    texas_sos: dict | None = None           # {county, entity_type}
-    ercot_interconnection: dict | None = None  # {milestone, load_zone, developer_matches_company}
-    accelerator_membership: dict | None = None  # {name, physical}
-    doe_oced_hub: dict | None = None        # {hub, role, project_location}
-    port_houston_lease: bool = False
-    form_5500: dict | None = None           # {zip, participant_count}
-    investors: list[str] = field(default_factory=list)
-    paid_pilots: list[dict] = field(default_factory=list)  # [{partner, site_named, language, is_mou_loi}]
-    tmci_jlabs: dict | None = None
-    houston_job_count: int = 0
-    job_postings: list[dict] = field(default_factory=list)  # [{location, title}]
-    innovationmap_features: list[str] = field(default_factory=list)
-    university_research_partnerships: list[dict] = field(default_factory=list)  # [{university, dollar_value}]
-    press_releases: list[dict] = field(default_factory=list)  # [{dateline, language, is_mou_loi}]
-    texas_sos_foreign: bool = False
-    event_speaking_slots: list[dict] = field(default_factory=list)
-    founder_linkedin_locations: list[str] = field(default_factory=list)
-    founder_alumni: list[str] = field(default_factory=list)
-    multiple_houston_employees: bool = False
-    employee_count: int | None = None
 
 
 @dataclass
@@ -396,7 +312,6 @@ def _detect_houston_job_postings_substantive(company: CompanyRecord) -> SignalCo
             raw_evidence=f"{company.houston_job_count} Houston job postings",
             false_positive_flag=None,
         )
-    # Site-specific role keywords signal substantive Houston operations even with fewer postings
     site_kws = {"plant manager", "houston sales", "houston lead", "houston director"}
     for job in company.job_postings:
         title = job.get("title", "").lower()
@@ -561,8 +476,6 @@ def _assign_tier(
     if total_points >= 5 and high_operational_count >= 1:
         return "B-high", False
     if total_points >= 3:
-        # Upper bound of 5 in spec applies when B-high condition met; extend beyond 5
-        # here to handle edge case of total_points > 5 with no HIGH operational signal.
         return "B", False
     if total_points >= 1:
         return "B-low", True
@@ -573,7 +486,7 @@ def _assign_confidence(
     tier: str,
     signals_matched: list[SignalContribution],
 ) -> str:
-    """Simplified confidence rules per resolution #9."""
+    """Simplified confidence rules per spec v2 resolution #9."""
     contributing = [s for s in signals_matched if s.weight > 0]
 
     if tier == "C":
@@ -582,23 +495,18 @@ def _assign_confidence(
     high_sigs = [s for s in contributing if s.category == "HIGH"]
     medium_sigs = [s for s in contributing if s.category == "MEDIUM"]
 
-    # Only LOW signals → LOW
     if not high_sigs and not medium_sigs:
         return "LOW"
 
-    # ≥2 distinct signals with at least one HIGH → HIGH
     if len(contributing) >= 2 and high_sigs:
         return "HIGH"
 
-    # 1 HIGH signal alone → MEDIUM
     if len(high_sigs) == 1 and not medium_sigs:
         return "MEDIUM"
 
-    # ≥2 MEDIUM signals with no HIGH → MEDIUM
     if not high_sigs and len(medium_sigs) >= 2:
         return "MEDIUM"
 
-    # 1 MEDIUM alone → LOW
     return "LOW"
 
 
@@ -635,15 +543,6 @@ def score_houston_presence(company: CompanyRecord) -> HoustonPresenceResult:
     """Score a company's Houston presence and return a tiered result with audit trace.
 
     Pure function — no I/O, no LLM calls, no side effects.
-
-    Args:
-        company: CompanyRecord with any combination of signal fields. Missing
-                 fields default to None / empty list and are handled gracefully.
-
-    Returns:
-        HoustonPresenceResult with tier, total_points, high_operational_count,
-        signals_matched (full trace including zero-weight false positives),
-        confidence, review_queue, and notes.
     """
     signals: list[SignalContribution] = []
 
