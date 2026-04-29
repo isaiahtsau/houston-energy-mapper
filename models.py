@@ -76,6 +76,45 @@ TIER_RANK: dict[str, int] = {
     "C": 0, "B-low": 1, "B": 2, "B-high": 3, "A-low": 4, "A": 5,
 }
 
+# Founder pedigree tier ordering for tier_min / tier_max assertions
+PEDIGREE_TIER_RANK: dict[str, int] = {
+    "LOW": 0, "LOW-MEDIUM": 1, "MEDIUM": 2, "MEDIUM-HIGH": 3, "HIGH": 4,
+}
+
+# Canonical aliases for major companies and service cos (used by B1 detector and multipliers)
+COMPANY_ALIASES: dict[str, frozenset[str]] = {
+    "SLB": frozenset({"SLB", "Schlumberger"}),
+    "HAL": frozenset({"HAL", "Halliburton"}),
+    "BHGE": frozenset({"BHGE", "Baker Hughes", "Baker Hughes GE"}),
+    "ExxonMobil": frozenset({"ExxonMobil", "Exxon", "Mobil", "ExxonMobil LCS"}),
+    "OXY": frozenset({"OXY", "Occidental", "Occidental Petroleum"}),
+    "BP": frozenset({"BP", "British Petroleum", "bp"}),
+    "Shell": frozenset({"Shell", "Royal Dutch Shell"}),
+    "Chevron": frozenset({"Chevron", "Chevron Corporation"}),
+    "ConocoPhillips": frozenset({"ConocoPhillips", "Conoco", "Phillips"}),
+    "Phillips 66": frozenset({"Phillips 66"}),
+    "Marathon": frozenset({"Marathon", "Marathon Oil", "Marathon Petroleum"}),
+    "TotalEnergies": frozenset({"TotalEnergies", "Total"}),
+    "Weatherford": frozenset({"Weatherford"}),
+    "NOV": frozenset({"NOV", "National Oilwell Varco"}),
+}
+
+
+def resolves_to_major(name: str) -> str | None:
+    """Return canonical key if name matches any COMPANY_ALIASES entry, else None.
+
+    Matching is case-insensitive substring: name resolves to a canonical key if
+    any alias in that key's frozenset is found (case-insensitively) in name, or
+    name is found in any alias.
+    """
+    name_lower = name.lower()
+    for canonical, aliases in COMPANY_ALIASES.items():
+        for alias in aliases:
+            alias_lower = alias.lower()
+            if alias_lower in name_lower or name_lower in alias_lower:
+                return canonical
+    return None
+
 # Corporate VC arms that signal strategic validation (used by HX-02 hard-exclude)
 CORPORATE_VC_WHITELIST: frozenset[str] = frozenset({
     "CTV",
@@ -152,3 +191,6 @@ class CompanyRecord:
     most_recent_round: dict | None = None    # {round_type, amount_usd, language, use_of_proceeds}
     federal_grants: list[dict] = field(default_factory=list)  # [{program, phase, year}]
     patents: list[dict] = field(default_factory=list)         # [{cpc, status, count}]
+    licensed_ip_labs: list[str] = field(default_factory=list) # e.g. ["Rice Halas Lab"]
+    founders: list[dict] = field(default_factory=list)        # [{name, role, bio_text, linkedin_url}]
+                                                              # populated by enrich/founder.py

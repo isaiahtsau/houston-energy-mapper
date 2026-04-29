@@ -1,0 +1,131 @@
+[
+  {
+    "case_id": "FP-TC-01_rice_phd_with_lab_match",
+    "description": "Founder with Rice ChemE PhD under Halas lab; company licensed Halas IP. Triggers B2 + lab+IP multiplier.",
+    "evidence": {
+      "name": "FOUNDER_A",
+      "role": "CTO",
+      "bio": "PhD in Chemical Engineering from Rice University, Halas Lab, 2019. Co-author on 14 peer-reviewed papers in plasmonic photocatalysis.",
+      "company_licensed_ip_lab": "Rice Halas Lab"
+    },
+    "expected": {
+      "categories_required": ["B2"],
+      "multipliers_required": ["lab_ip_alignment", "houston_university_phd"],
+      "tier_min": "HIGH",
+      "confidence": "HIGH"
+    }
+  },
+  {
+    "case_id": "FP-TC-02_service_co_principal",
+    "description": "Founder with 12 years at Schlumberger as Principal Engineer.",
+    "evidence": {
+      "name": "FOUNDER_B",
+      "role": "CEO",
+      "bio": "12 years at Schlumberger, most recently as Principal Engineer for completions technology. Holds 8 issued patents in downhole sensing.",
+      "company_licensed_ip_lab": null
+    },
+    "expected": {
+      "categories_required": ["B1"],
+      "multipliers_required": ["service_co_senior"],
+      "tier_min": "MEDIUM-HIGH",
+      "confidence": "MEDIUM"
+    }
+  },
+  {
+    "case_id": "FP-TC-03_activate_houston_fellow",
+    "description": "Activate Houston Fellow with Berkeley PhD.",
+    "evidence": {
+      "name": "FOUNDER_C",
+      "role": "Co-founder",
+      "bio": "Activate Houston Fellow (Cohort 2). PhD Materials Science, UC Berkeley (Ceder group), 2022.",
+      "company_licensed_ip_lab": null
+    },
+    "expected": {
+      "categories_required": ["B2", "B4"],
+      "multipliers_required": ["houston_accelerator_program"],
+      "tier_min": "MEDIUM-HIGH",
+      "confidence": "HIGH"
+    }
+  },
+  {
+    "case_id": "FP-TC-04_serial_founder_acquired_to_major",
+    "description": "Serial founder whose prior company was acquired by Halliburton.",
+    "evidence": {
+      "name": "FOUNDER_D",
+      "role": "CEO",
+      "bio": "Founder/CEO of Acme Sensors (acquired by Halliburton 2019). Prior to Acme, founded MethaneTech (still operating, Series B). 8 years at Baker Hughes early career.",
+      "company_licensed_ip_lab": null
+    },
+    "expected": {
+      "categories_required": ["B3", "B1"],
+      "tier_min": "HIGH",
+      "confidence": "HIGH"
+    }
+  },
+  {
+    "case_id": "FP-TC-05_lab_director_houston_relevant",
+    "description": "Former NETL Lab Director.",
+    "evidence": {
+      "name": "FOUNDER_E",
+      "role": "CSO",
+      "bio": "Former Director of CO2 Capture R&D at NETL (2014-2022). Senior Scientist 2008-2014.",
+      "company_licensed_ip_lab": null
+    },
+    "expected": {
+      "categories_required": ["B5"],
+      "tier_min": "HIGH",
+      "confidence": "HIGH"
+    }
+  },
+  {
+    "case_id": "FP-TC-06_consultant_solo_founder_low",
+    "description": "Solo non-technical founder with consulting background only.",
+    "evidence": {
+      "name": "FOUNDER_F",
+      "role": "Founder",
+      "bio": "10 years at McKinsey Energy Practice, focused on upstream operations strategy. MBA, Wharton, 2014.",
+      "company_licensed_ip_lab": null,
+      "is_solo_founder": true,
+      "has_technical_cofounder": false
+    },
+    "expected": {
+      "categories_required": ["B6"],
+      "tier_max": "LOW-MEDIUM",
+      "confidence": "MEDIUM",
+      "review_queue": true,
+      "false_positive_pattern": "consulting_solo_no_technical_cofounder"
+    }
+  },
+  {
+    "case_id": "FP-TC-07_sparse_public_profile",
+    "description": "Bio is one sentence; LinkedIn locked; no public team page detail.",
+    "evidence": {
+      "name": "FOUNDER_G",
+      "role": "Co-founder",
+      "bio": "Co-founder and Head of Engineering.",
+      "company_licensed_ip_lab": null
+    },
+    "expected": {
+      "categories_required": [],
+      "tier_max": "LOW",
+      "confidence": "LOW",
+      "review_queue": true
+    }
+  },
+  {
+    "case_id": "FP-TC-08_uh_tcsuh_with_houston_multiplier",
+    "description": "PhD from UH TcSUH under Selvamanickam.",
+    "evidence": {
+      "name": "FOUNDER_H",
+      "role": "CTO",
+      "bio": "PhD Mechanical Engineering, University of Houston, TcSUH (Selvamanickam group), 2020. 4 issued patents in 2G HTS wire manufacturing.",
+      "company_licensed_ip_lab": null
+    },
+    "expected": {
+      "categories_required": ["B2"],
+      "multipliers_required": ["houston_university_phd"],
+      "tier_min": "MEDIUM-HIGH",
+      "confidence": "HIGH"
+    }
+  }
+]
