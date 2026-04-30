@@ -50,6 +50,14 @@ def _get_run_id() -> str:
 # Stage: Harvest
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _build_harvester_registry() -> dict[str, type]:
+    """Build the harvester registry on first use (lazy import avoids heavy deps at startup)."""
+    from harvest.rice_etvf import RiceEtvfHarvester
+    return {
+        "rice_etvf": RiceEtvfHarvester,
+    }
+
+
 def run_harvest(
     sources: list[str] | None = None,
     dry_run: bool = False,
@@ -58,19 +66,108 @@ def run_harvest(
     """Run source harvesters and write raw records to the pipeline database.
 
     Args:
-        sources:  List of SOURCE_NAME values to run. None = run all registered sources.
+        sources:  List of registry keys to run (e.g. ["rice_etvf"]).
+                  None = run all registered sources.
         dry_run:  Log what would run without writing to DB.
         console:  Rich console for progress output.
-
-    Implementation note (Step 5+): This stub will be replaced with a loop over
-    the registered harvester registry (a dict mapping source names → harvester classes).
-    The orchestrator handles Playwright browser initialization here for all
-    harvesters that declare requires_browser=True.
     """
-    # Stub — full implementation in Step 5
-    if console:
-        console.print("[bold blue]Harvest:[/bold blue] (not yet implemented — Step 5)")
-    logger.info("[orchestrator:harvest] Stub — not yet implemented")
+    import json
+
+    from rich.table import Table
+
+    from storage.db import init_db, to_json_column
+
+    registry = _build_harvester_registry()
+    keys_to_run = sources if sources is not None else list(registry.keys())
+
+    # Validate requested sources
+    unknown = [k for k in keys_to_run if k not in registry]
+    for k in unknown:
+        known = ", ".join(registry.keys())
+        if console:
+            console.print(f"[red]Unknown source:[/red] '{k}'. Known: {known}")
+        logger.error(f"[orchestrator:harvest] Unknown source '{k}'. Known: {known}")
+    keys_to_run = [k for k in keys_to_run if k in registry]
+
+    if dry_run:
+        if console:
+            for k in keys_to_run:
+                cls = registry[k]
+                console.print(
+                    f"[yellow]DRY RUN:[/yellow] would run "
+                    f"[bold]{cls.SOURCE_NAME}[/bold] "
+                    f"(expected yield: {cls.EXPECTED_YIELD})"
+                )
+        return
+
+    conn = init_db()
+    run_id = _get_run_id()
+    total_records = 0
+
+    for key in keys_to_run:
+        HarvesterClass = registry[key]
+        harvester = HarvesterClass()
+
+        if console:
+            console.print(f"[bold blue]Harvesting:[/bold blue] {HarvesterClass.SOURCE_NAME}")
+
+        result = harvester.run()
+        total_records += len(result.records)
+
+        # Write harvest_run audit record
+        conn.execute(
+            """
+            INSERT INTO harvest_runs
+                (run_id, source, started_at, completed_at, success, records_harvested, error)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                run_id,
+                HarvesterClass.SOURCE_NAME,
+                result.started_at.isoformat(),
+                datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                1 if result.success else 0,
+                len(result.records),
+                result.error,
+            ),
+        )
+
+        # Write raw_records
+        for rec in result.records:
+            conn.execute(
+                """
+                INSERT INTO raw_records
+                    (source, source_url, name_raw, description, website,
+                     location_raw, tags, extra, harvested_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    rec.source,
+                    rec.source_url,
+                    rec.name,
+                    rec.description,
+                    rec.website,
+                    rec.location_raw,
+                    to_json_column(rec.tags),
+                    to_json_column(rec.extra),
+                    rec.harvested_at.isoformat(),
+                ),
+            )
+
+        conn.commit()
+
+        status = "[green]ok[/green]" if result.success else "[red]FAILED[/red]"
+        if console:
+            console.print(
+                f"  {status} — {len(result.records)} records "
+                f"in {result.duration_seconds:.1f}s"
+            )
+        if not result.success and result.error:
+            if console:
+                console.print(f"  [red]Error:[/red] {result.error}")
+
+    if console and len(keys_to_run) > 1:
+        console.print(f"\n[bold]Total records harvested:[/bold] {total_records}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

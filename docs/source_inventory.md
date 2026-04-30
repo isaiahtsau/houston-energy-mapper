@@ -2,8 +2,8 @@
 
 **Purpose:** Master catalog of harvest sources for the Houston Energy Mapper pipeline.
 **Drives:** `harvest/*.py` modules and `pipeline/orchestrator.py` source registry.
-**Version:** v2
-**Last updated:** 2026-04-29
+**Version:** v3
+**Last updated:** 2026-04-30
 
 ---
 
@@ -39,21 +39,39 @@ Each source has a one-row metadata block. Field meanings:
 
 These are the highest-signal sources for Tier A and Tier B-high companies. Houston-headquartered or Houston-operating companies cycle through these consistently.
 
-### `rice_alliance` — Rice Alliance Clean Energy Accelerator (RACEA)
+### `rice_etvf` — Rice Energy Tech Venture Forum (ETVF)
+
+| Field | Value |
+|-------|-------|
+| Type | event |
+| URL | https://alliance.rice.edu/etvf/past-conferences/{year}-etvf/Companies |
+| Houston tier reach | A, A-low, B-high, B |
+| Scrape method | static_html |
+| Scrape depth | listing_plus_detail |
+| Auth required | No |
+| Update cadence | annual; ETVF held each September |
+| Expected yield | 80-240 (~80-120 per year pre-2025; ~99 in 2025 cohort; year list extensible via `ETVF_YEARS` class constant) |
+| v1 status | implemented (Step 5 — first harvester) |
+
+**Notes.** Two-pass harvest: listing pages (all years) then profile pages (2024+). 2022-2023 records are listing-only (no profile page exists on alliance.rice.edu for those cohorts). Includes ETVF participants from Rice Alliance RACEA, Halliburton Labs, Greentown Houston, and international presenters — RACEA-specific membership is not tagged on alliance.rice.edu and is resolved by cross-source dedup at Step 10 against `rice_alliance_racea`. `ETVF_YEARS = [2022, 2023, 2024, 2025]`; extend when future years are published. Year probe: harvester always tries `max(ETVF_YEARS) + 1` to detect new cohorts. Within-harvest dedup: slug-keyed (profile records) or name-keyed (listing-only); same company may appear as both a listing-only record (2022-2023 text list) and a profile record (2024+ grid) — cross-source dedup at Step 10 handles via fuzzy name matching.
+
+---
+
+### `rice_alliance_racea` — Rice Alliance Clean Energy Accelerator (RACEA) portfolio
 
 | Field | Value |
 |-------|-------|
 | Type | accelerator |
-| URL | https://alliance.rice.edu/clean-energy-accelerator |
+| URL | https://ricecleanenergy.org/portfolio |
 | Houston tier reach | A, A-low |
-| Scrape method | static_html |
+| Scrape method | headless_html |
 | Scrape depth | listing_plus_detail |
 | Auth required | No |
 | Update cadence | annual; cohort 5 in 2025 |
 | Expected yield | 60-80 (~12-15 companies per cohort; ~60-80 alumni total across 5 cohorts) |
-| v1 status | implemented (Step 5 — first harvester) |
+| v1 status | deferred (Step 7+ — requires Playwright; pending headless_html harvester pattern) |
 
-**Notes.** Most reliable single Houston-energy source. Cohort pages list company name, website, founders, and brief description. Alumni list spans 2021-present.
+**Deferral rationale.** ricecleanenergy.org/portfolio is JavaScript-rendered (React SPA) — static requests return no portfolio content. Requires Playwright. Deferred until Step 7+ when the headless_html harvester pattern is established. RACEA companies are partially surfaced via `rice_etvf` (ETVF participants include RACEA cohort members), but RACEA-specific membership and cohort class tags are only available from ricecleanenergy.org. Pre-implementation inspection: alliance.rice.edu/clean-energy-accelerator returns 404; ricecleanenergy.org is the authoritative RACEA source.
 
 ---
 
@@ -620,11 +638,11 @@ These were considered during scoping and explicitly descoped. Documenting the *w
 | Status | Count | Notes |
 |--------|-------|-------|
 | Implemented (v1) | 27 | 12 Tier 1 standalone + 2 Tier 2 standalone + 4 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups |
-| Deferred (Phase 2) | 17 | 5 standalone sources + 5 corporate VC remainder + 7 national climate VC remainder |
+| Deferred (Phase 2) | 18 | 6 standalone sources + 5 corporate VC remainder + 7 national climate VC remainder |
 | Stretch (Phase 2+) | 1 | USPTO stealth discovery (Phase 2 — Step 13+; defer until dedup layer is mature) |
 | Considered + excluded | 4 categories | Social, paid databases, TMC, event rosters |
 
-**Total source universe considered:** 27 implemented + 17 deferred + 1 stretch = 45 active sources + 4 excluded categories = 49 distinct decisions documented.
+**Total source universe considered:** 27 implemented + 18 deferred + 1 stretch = 46 active sources + 4 excluded categories = 50 distinct decisions documented.
 
 ---
 
@@ -640,6 +658,8 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 ---
 
 ## Changelog
+
+- **v3** (2026-04-30): `rice_alliance` renamed to `rice_etvf` after pre-implementation inspection revealed alliance.rice.edu archive aggregates ETVF participants without RACEA-specific tagging; ricecleanenergy.org portfolio is JavaScript-rendered and requires Playwright. RACEA-specific harvester added as new deferred source `rice_alliance_racea` (Step 7+ pending headless_html pattern). `rice_etvf` Type updated to `event`; URL changed to ETVF year-pattern; Houston tier reach broadened to A/A-low/B-high/B to reflect mixed participant pool; `EXPECTED_YIELD` revised to `80-240` (2025 cohort: 99 records; 2022-2025 combined: 202 records). Summary: deferred count bumped 17→18; total universe 45→46. Dual-record note added: same company may appear as listing-only (2022-2023) and profile (2024+).
 
 - **v2** (2026-04-29):
   1. USPTO renumbered to Phase 2 — Step 13+; v1 status updated to `stretch (Phase 2 — Step 13+)`. Export remains Step 12.
@@ -661,3 +681,4 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 |---------|------|-------------|---------|
 | v1 | 2026-04-29 | Claude (agent) | 10 concerns raised: Step 12 collision (USPTO vs. export), config-driven multi-source harvester architecture, undeclared Type vocabulary members, undeclared Update cadence members, ERCOT stage ambiguity (harvest vs. enrichment filter), ERCOT manual vs. programmatic fetch, unverified `etv_portfolio` URL, `EXPECTED_YIELD` format mismatch with base class, summary count discrepancy (13 vs. actual), `config/corporate_vc_sources.yaml` prerequisite |
 | v2 | 2026-04-29 | User | All 10 concerns resolved + 2 cross-cutting additions (scrape_depth field, scrape method taxonomy); amendments applied as changelog above |
+| v3 | 2026-04-30 | User | `rice_alliance` renamed to `rice_etvf`; `rice_alliance_racea` added as deferred. Pre-implementation inspection caught alliance.rice.edu aggregation pattern and RACEA URL change before code was written. |
