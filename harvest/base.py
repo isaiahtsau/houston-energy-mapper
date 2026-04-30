@@ -15,8 +15,9 @@ The base class provides:
 Source metadata convention (required on every subclass):
   SOURCE_NAME:     Human-readable name, e.g. "Rice Alliance Clean Energy Accelerator"
   SOURCE_URL:      Canonical URL of the source
-  SOURCE_TYPE:     One of: vc_portfolio | accelerator | government_filing | rss |
-                            government_api | job_feed | patent_db | trade_press
+  SOURCE_TYPE:     One of: accelerator | accelerator_innovation_district | vc_portfolio |
+                            corporate_vc | government_filing | rss_feed | fellowship_directory |
+                            university | event | patent_search | industry_group | commercial_api
   UPDATE_CADENCE:  One of: daily | weekly | monthly | quarterly | annual | on_demand
   SCRAPE_METHOD:   One of: static | headless | api | rss | pdf
   AUTH_REQUIRED:   True if the source requires login or an API key
