@@ -18,10 +18,15 @@ env/
 
 # ── Raw scraped data ─────────────────────────────────────────────────────────
 # These directories are large, binary-adjacent, and fully regenerated each run.
-# The cleaned output (data/db/, data/exports/, data/validated_examples.jsonl)
-# IS committed — it is part of the graded deliverable.
 data/raw/
 data/staging/
+
+# ── Generated artifacts — force-added at submission (Step 14) ────────────────
+# Binary/large outputs that change every pipeline run. Excluded during the build
+# to avoid noisy diffs and repo bloat. At submission, use `git add -f data/db/
+# data/exports/` to include the final pipeline.db and exported spreadsheets.
+data/db/
+data/exports/
 
 # ── Playwright ───────────────────────────────────────────────────────────────
 .playwright/
@@ -40,7 +45,5 @@ Thumbs.db
 htmlcov/
 .coverage
 
-# ── Intentionally KEPT in git (deliverables and flywheel state) ──────────────
-# data/db/             — SQLite databases (pipeline output, flywheel state)
-# data/exports/        — xlsx and csv deliverables
+# ── Intentionally KEPT in git (flywheel state) ───────────────────────────────
 # data/validated_examples.jsonl — human-validated few-shot examples (flywheel)
