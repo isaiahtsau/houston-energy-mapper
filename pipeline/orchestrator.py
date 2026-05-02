@@ -59,6 +59,8 @@ def _build_harvester_registry() -> dict[str, type]:
     from harvest.goose_capital import GooseCapitalHarvester
     from harvest.greentown_houston import GreentownHoustonHarvester
     from harvest.energytech_nexus import EnergyTechNexusHarvester
+    from harvest.ion_district import IonDistrictHarvester
+    from harvest.rbpc_alumni import RbpcAlumniHarvester
     return {
         "rice_etvf": RiceEtvfHarvester,
         "innovationmap_rss": InnovationMapRssHarvester,
@@ -67,6 +69,8 @@ def _build_harvester_registry() -> dict[str, type]:
         "goose_capital": GooseCapitalHarvester,
         "greentown_houston": GreentownHoustonHarvester,
         "energytech_nexus": EnergyTechNexusHarvester,
+        "ion_district": IonDistrictHarvester,
+        "rbpc_alumni": RbpcAlumniHarvester,
     }
 
 
