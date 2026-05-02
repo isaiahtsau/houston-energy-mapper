@@ -55,10 +55,14 @@ def _build_harvester_registry() -> dict[str, type]:
     from harvest.rice_etvf import RiceEtvfHarvester
     from harvest.innovationmap_rss import InnovationMapRssHarvester
     from harvest.halliburton_labs import HalliburtonLabsHarvester
+    from harvest.ecv import EnergyCapitalVenturesHarvester
+    from harvest.goose_capital import GooseCapitalHarvester
     return {
         "rice_etvf": RiceEtvfHarvester,
         "innovationmap_rss": InnovationMapRssHarvester,
         "halliburton_labs": HalliburtonLabsHarvester,
+        "ecv_portfolio": EnergyCapitalVenturesHarvester,
+        "goose_capital": GooseCapitalHarvester,
     }
 
 

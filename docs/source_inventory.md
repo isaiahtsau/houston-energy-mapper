@@ -2,7 +2,7 @@
 
 **Purpose:** Master catalog of harvest sources for the Houston Energy Mapper pipeline.
 **Drives:** `harvest/*.py` modules and `pipeline/orchestrator.py` source registry.
-**Version:** v4
+**Version:** v5
 **Last updated:** 2026-05-02
 
 ---
@@ -219,21 +219,23 @@ These are the highest-signal sources for Tier A and Tier B-high companies. Houst
 
 ---
 
-### `goose_capital` — Goose Capital portfolio
+### `goose_capital` — GOOSE Capital portfolio
 
 | Field | Value |
 |-------|-------|
 | Type | vc_portfolio |
-| URL | https://goosecapital.com/portfolio |
+| URL | https://www.goose.capital/portfolio |
 | Houston tier reach | A, A-low |
 | Scrape method | static_html |
-| Scrape depth | listing_plus_detail |
+| Scrape depth | single_page |
 | Auth required | No |
 | Update cadence | quarterly |
-| Expected yield | 30-40 (~30-40 portfolio companies) |
+| Expected yield | 20-35 (~30 portfolio companies at time of build; mixed sectors) |
 | v1 status | implemented (Step 9 — Batch 1) |
 
-**Notes.** Houston-based VC, strong Houston-energy thesis. Portfolio overlaps with Greentown Houston, Halliburton Labs cohort.
+**Domain correction.** Spec listed `goosecapital.com` — that domain does not resolve (DNS NXDOMAIN). Correct domain confirmed during pre-implementation inspection: `www.goose.capital`. Harvester uses the correct domain.
+
+**Notes.** Houston-based generalist VC. Portfolio is mixed-sector (~6/30 energy-relevant at time of build); classifier filters to energy/industrial subset. Single-page Webflow CMS layout — no detail pages. Company name inferred from Webflow CDN logo image filename (Webflow hash prefix stripped, logo suffix stripped, title-cased); name approximation is adequate for dedup but may lose suffix words (e.g., "Adhesys" vs. "Adhesys Medical"). External company website URL extracted directly from card href.
 
 ---
 
@@ -248,10 +250,10 @@ These are the highest-signal sources for Tier A and Tier B-high companies. Houst
 | Scrape depth | listing_plus_detail |
 | Auth required | No |
 | Update cadence | quarterly |
-| Expected yield | 25-40 (~25-40 portfolio companies) |
+| Expected yield | 10-15 (~12 portfolio companies at time of build: 9 Fund I, 3 Fund II) |
 | v1 status | implemented (Step 9 — Batch 1) |
 
-**Notes.** ECV co-investing in Houston-anchored deals is a MEDIUM signal in `houston_co_investor_whitelist`. Portfolio surfaces Tier B-high companies that show up in Houston pilot/customer pipelines.
+**Notes.** ECV co-investing in Houston-anchored deals is a MEDIUM signal in `houston_co_investor_whitelist`. Portfolio surfaces Tier B-high companies that show up in Houston pilot/customer pipelines. Webflow CMS — two w-dyn-items blocks (Fund I: 9 companies, Fund II: 3 companies). Two-pass harvest: index page for slug list + fund membership, then detail page per company for name, description, location, founders, and investment date. External company website not present in ECV static HTML. Founders stored as semicolon-delimited list in extra["founders"].
 
 ---
 
@@ -260,17 +262,16 @@ These are the highest-signal sources for Tier A and Tier B-high companies. Houst
 | Field | Value |
 |-------|-------|
 | Type | vc_portfolio |
-| URL | https://etv.energy/portfolio (verify URL during implementation) |
+| URL | https://etv.energy/portfolio (DNS NXDOMAIN at time of build) |
 | Houston tier reach | A, B-high, B |
 | Scrape method | static_html |
 | Scrape depth | listing_plus_detail |
 | Auth required | No |
 | Update cadence | quarterly |
 | Expected yield | 20-30 (~20-30 portfolio companies) |
-| Pre-implementation check | Verify URL and portfolio page structure before building harvester. Reassign to deferred if portfolio is not yet published. Pre-implementation task assigned to Step 9 Batch 1 lead. |
-| v1 status | implemented (Step 9 — Batch 1) |
+| v1 status | deferred (Phase 2 — DNS NXDOMAIN at build time) |
 
-**Notes.** Identified as a v1 gap by Research output. Houston-affiliated, energy-transition focused. URL/structure to verify during implementation per pre-implementation check above.
+**Deferral rationale.** Pre-implementation inspection (2026-05-01) confirmed `etv.energy` does not resolve — DNS returns NXDOMAIN for both `etv.energy` and `etv.energy/portfolio`. The domain may have changed since Research output was produced. Re-verify in Phase 2: search for current ETV web presence; if a portfolio page exists at a different URL, update this entry and implement the harvester. URL pattern at time of original spec: `etv.energy/portfolio`.
 
 ---
 
@@ -326,19 +327,19 @@ These sources surface Tier B and Tier C candidates: companies operating outside 
 | Auth required | No |
 | Update cadence | quarterly; varies per VC |
 | Expected yield | 120-180 (~120-180 portfolio companies across all 9 sub-sources) |
-| v1 status | partially implemented (top 4 sub-sources in Step 9 — Batch 1; remainder deferred Step 11+) |
+| v1 status | deferred (Phase 2 — all four target CVC URLs inaccessible at build time; framework architecture is correct but unpopulated) |
 
-**Multi-source pattern (Path B).** The orchestrator instantiates `CorporateVcHarvester` once per YAML entry, injecting `SOURCE_NAME` via `__init__`. Each instance produces one `HarvestResult` with per-source run-log granularity intact. `config/corporate_vc_sources.yaml` exists in the scaffold with template entries — Step 9 Batch 1 work is populating it with the top-4 CVCs, not creating the file from scratch.
+**Multi-source pattern (Path B).** The orchestrator instantiates `CorporateVcHarvester` once per YAML entry, injecting `SOURCE_NAME` via `__init__`. Each instance produces one `HarvestResult` with per-source run-log granularity intact. `config/corporate_vc_sources.yaml` exists in the scaffold — but all entries (original scaffold + four user-specified CVCs) were found to be inaccessible during pre-implementation inspection (see deferral rationale above and sub-source notes below). The framework architecture is correct per Path B pattern; no Python code needs to change when URLs are found — only YAML entries.
 
 **Sub-sources (priority order):**
 
-1. **Chevron Technology Ventures (CTV)** — Houston-HQ corporate VC. Strongest Houston signal among CVCs. *(v1 implemented)*
-2. **SLB Ventures (Schlumberger)** — Houston-HQ. *(v1 implemented)*
-3. **ExxonMobil Low Carbon Solutions** — Houston-relevant industrial deals. *(v1 implemented)*
-4. **Baker Hughes Energy Ventures (BHEV)** — Houston-HQ. *(v1 implemented)*
+1. **Chevron Technology Ventures (CTV)** — Houston-HQ corporate VC. Strongest Houston signal among CVCs. *(deferred Phase 2 — Cloudflare bot protection on chevrontechnologyventures.com/portfolio; requires Playwright + stealth config)*
+2. **SLB Ventures (Schlumberger)** — Houston-HQ. *(deferred Phase 2 — slbventures.com is a Squarespace "coming soon" stub; current URL unknown)*
+3. **ExxonMobil Low Carbon Solutions** — Houston-relevant industrial deals. *(deferred Phase 2 — corporate.exxonmobil.com LCS page removed; redirects to 404)*
+4. **Baker Hughes Energy Ventures (BHEV)** — Houston-HQ. *(deferred Phase 2 — bakerhughes.com/innovation/venturing returns 404; current URL unknown)*
 5. bp Ventures — international, Houston-relevant subset. *(deferred Step 11+)*
-6. Shell Ventures — international, Houston-relevant subset. *(deferred Step 11+)*
-7. Equinor Ventures — international, narrower Houston relevance. *(deferred Step 11+)*
+6. Shell Ventures — international, Houston-relevant subset. *(deferred Step 11+ — shellventures.com domain parked/for-sale on GoDaddy)*
+7. Equinor Ventures — international, narrower Houston relevance. *(deferred Step 11+ — equinor.com/ventures 404)*
 8. OGCI Climate Investments — multi-LP coalition, broad geography. *(deferred Step 11+)*
 9. Aramco Ventures — narrower Houston relevance. *(deferred Step 11+)*
 
@@ -637,12 +638,12 @@ These were considered during scoping and explicitly descoped. Documenting the *w
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| Implemented (v1) | 27 | 12 Tier 1 standalone + 2 Tier 2 standalone + 4 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups |
-| Deferred (Phase 2) | 18 | 6 standalone sources + 5 corporate VC remainder + 7 national climate VC remainder |
+| Implemented (v1) | 21 | 10 Tier 1 standalone + 2 Tier 2 standalone (goose_capital, ecv_portfolio) + 0 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups |
+| Deferred (Phase 2) | 25 | 7 standalone sources (incl. etv_portfolio) + 9 corporate VC sub-sources (all 4 top-priority now Phase 2) + 7 national climate VC remainder + 2 previously deferred standalone |
 | Stretch (Phase 2+) | 1 | USPTO stealth discovery (Phase 2 — Step 13+; defer until dedup layer is mature) |
 | Considered + excluded | 4 categories | Social, paid databases, TMC, event rosters |
 
-**Total source universe considered:** 27 implemented + 18 deferred + 1 stretch = 46 active sources + 4 excluded categories = 50 distinct decisions documented.
+**Total source universe considered:** 21 implemented + 25 deferred + 1 stretch = 47 active sources + 4 excluded categories = 51 distinct decisions documented.
 
 ---
 
@@ -658,6 +659,8 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 ---
 
 ## Changelog
+
+- **v5** (2026-05-02): Step 9 Batch 1 source corrections discovered during pre-implementation inspection. `goose_capital` domain confirmed as `www.goose.capital` (`goosecapital.com` does not resolve — DNS NXDOMAIN); scrape depth corrected from `listing_plus_detail` to `single_page` (single Webflow CMS page, no detail pages); yield revised to `20-35` (30 records confirmed at build time). `ecv_portfolio` yield revised to `10-15` (12 records confirmed: 9 Fund I, 3 Fund II). `etv_portfolio` status reassigned from `implemented (Step 9 — Batch 1)` to `deferred (Phase 2)` — `etv.energy` is DNS NXDOMAIN; re-verify in Phase 2. `corporate_vc_arms` status reassigned from `partially implemented (top 4 sub-sources)` to `deferred (Phase 2)` — all four target CVC URLs inaccessible (CTV: Cloudflare 403; SLB Ventures: `slbventures.com` is a Squarespace "coming soon" stub; ExxonMobil LCS: page removed, 302→404; BHEV: `bakerhughes.com/innovation/venturing` is 404). `config/corporate_vc_sources.yaml` scaffold entries also found to be dead (`shellventures.com` parked on GoDaddy, Equinor ventures 404, bp ventures 403). Framework architecture (Path B) is correct and requires no Python changes — only YAML population. Phase 2 work: Cloudflare-aware harvester pattern needed for CTV; current URL discovery needed for SLB Ventures, ExxonMobil LCS, BHEV.
 
 - **v4** (2026-05-02): URL corrections for `innovationmap_rss` and `halliburton_labs` discovered during pre-implementation inspection before code was written. `innovationmap_rss`: URL changed from `www.innovationmap.com/feed/` (404 after redirect) to `houston.innovationmap.com/feeds/feed.rss`; yield range adjusted to `0-20` per run (snapshot of 30-article rolling window; cumulative quarterly yield 20-50); notes expanded with recency-discovery design rationale. `halliburton_labs`: URL changed from `/portfolio/` (404) to `/companies/`; scrape depth corrected from `listing_plus_detail` to `single_page` (no detail pages exist; all data on listing); SOURCE_TYPE corrected from `corporate_vc` to `accelerator` (cohort-based mentorship program, not equity-driven VC fund); yield range updated to `35-50` based on live run (42 records). Two harvester robustness improvements landed during live run: academic/gov domain skip list added to `innovationmap_rss` (pnas.org, uh.edu, nasa.gov, energy.gov, etc.); generic anchor text fallback to domain name (handles "news release", "press release", "here" anchors that point to company URLs).
 
@@ -683,5 +686,6 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 |---------|------|-------------|---------|
 | v1 | 2026-04-29 | Claude (agent) | 10 concerns raised: Step 12 collision (USPTO vs. export), config-driven multi-source harvester architecture, undeclared Type vocabulary members, undeclared Update cadence members, ERCOT stage ambiguity (harvest vs. enrichment filter), ERCOT manual vs. programmatic fetch, unverified `etv_portfolio` URL, `EXPECTED_YIELD` format mismatch with base class, summary count discrepancy (13 vs. actual), `config/corporate_vc_sources.yaml` prerequisite |
 | v2 | 2026-04-29 | User | All 10 concerns resolved + 2 cross-cutting additions (scrape_depth field, scrape method taxonomy); amendments applied as changelog above |
-| v4 | 2026-05-02 | User | `innovationmap_rss` and `halliburton_labs` URL corrections; `halliburton_labs` SOURCE_TYPE corrected to `accelerator`; yield ranges updated from live run data; two robustness improvements from live run documented. |
 | v3 | 2026-04-30 | User | `rice_alliance` renamed to `rice_etvf`; `rice_alliance_racea` added as deferred. Pre-implementation inspection caught alliance.rice.edu aggregation pattern and RACEA URL change before code was written. |
+| v4 | 2026-05-02 | User | `innovationmap_rss` and `halliburton_labs` URL corrections; `halliburton_labs` SOURCE_TYPE corrected to `accelerator`; yield ranges updated from live run data; two robustness improvements from live run documented. |
+| v5 | 2026-05-02 | User | Step 9 Batch 1 source corrections: `goose_capital` domain corrected to `goose.capital`; `etv_portfolio` and all `corporate_vc_arms` sub-sources reassigned to Phase 2 (DNS/Cloudflare/parked/removed); implemented count revised to 21. |
