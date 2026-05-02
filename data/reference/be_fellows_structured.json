@@ -1,0 +1,976 @@
+{
+  "companies": {
+    "qarbotech": {
+      "canonical_name": "Qarbotech",
+      "fellows": [
+        {
+          "name": "Suraya Abdul Rashid",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Chor Chee Hoe",
+          "role": "CEO, Co-Founder"
+        },
+        {
+          "name": "Amirul Merican",
+          "role": "COO, Co-Founder"
+        }
+      ]
+    },
+    "hyperheat": {
+      "canonical_name": "HyperHeat",
+      "fellows": [
+        {
+          "name": "Lars Amsbeck",
+          "role": "Co-CEO & CTO"
+        },
+        {
+          "name": "Frederick Lessman",
+          "role": "Co-CEO & CFO"
+        }
+      ]
+    },
+    "nitrovolt": {
+      "canonical_name": "NitroVolt",
+      "fellows": [
+        {
+          "name": "Suzanne Zamany Andersen",
+          "role": "CEO"
+        },
+        {
+          "name": "Mattia Saccoccio",
+          "role": "CTO"
+        }
+      ]
+    },
+    "prospect growth": {
+      "canonical_name": "Prospect Growth",
+      "fellows": [
+        {
+          "name": "Wyatt Arnold",
+          "role": "Co-Founder & CEO"
+        },
+        {
+          "name": "Andreas Backhaus",
+          "role": "Co-Founder & CTO"
+        }
+      ]
+    },
+    "hyperion transport systems": {
+      "canonical_name": "Hyperion Transport Systems",
+      "fellows": [
+        {
+          "name": "Samuel Austin",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Theodore Mouratidis",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "valoron": {
+      "canonical_name": "Valoron",
+      "fellows": [
+        {
+          "name": "Sebastian Bastek",
+          "role": "CEO"
+        },
+        {
+          "name": "Vincent Dieterich",
+          "role": "COO"
+        },
+        {
+          "name": "Marcel Dossow",
+          "role": "CTO"
+        }
+      ]
+    },
+    "spark e fuels": {
+      "canonical_name": "Spark e-Fuels",
+      "fellows": [
+        {
+          "name": "Julia Bauer",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Mathias Bösl",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Arno Zimmermann",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "evoloh": {
+      "canonical_name": "EvolOH",
+      "fellows": [
+        {
+          "name": "Scott Blanchet",
+          "role": "business"
+        },
+        {
+          "name": "Jimmy Rojas",
+          "role": "Founder"
+        }
+      ]
+    },
+    "sinkco labs": {
+      "canonical_name": "Sinkco Labs",
+      "fellows": [
+        {
+          "name": "Brenna Boehman",
+          "role": "CSO"
+        },
+        {
+          "name": "Victor Choquet",
+          "role": "CTO"
+        },
+        {
+          "name": "Viji Thomas",
+          "role": "CEO"
+        }
+      ]
+    },
+    "climatecrop": {
+      "canonical_name": "ClimateCrop",
+      "fellows": [
+        {
+          "name": "Yehuda Borenstein",
+          "role": "CEO"
+        },
+        {
+          "name": "Erez Eliyahu",
+          "role": "CTO"
+        },
+        {
+          "name": "Vivekanand Tiwari",
+          "role": "CSO"
+        }
+      ]
+    },
+    "molten industries": {
+      "canonical_name": "Molten Industries",
+      "fellows": [
+        {
+          "name": "Caleb Boyd",
+          "role": "CTO"
+        },
+        {
+          "name": "Kevin Bush",
+          "role": "CEO & Co-Founder"
+        }
+      ]
+    },
+    "conduit tech": {
+      "canonical_name": "Conduit Tech",
+      "fellows": [
+        {
+          "name": "Shelby Breger",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Marisa Reddy",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "sustainable chemicals": {
+      "canonical_name": "Sustainable Chemicals",
+      "fellows": [
+        {
+          "name": "Anthony Brockway",
+          "role": "Vice President of Chemistry"
+        },
+        {
+          "name": "Silvia Luebben",
+          "role": "Founder & CEO"
+        }
+      ]
+    },
+    "anning corporation": {
+      "canonical_name": "Anning Corporation",
+      "fellows": [
+        {
+          "name": "Sophie Broun",
+          "role": "CEO"
+        }
+      ]
+    },
+    "silicate": {
+      "canonical_name": "Silicate",
+      "fellows": [
+        {
+          "name": "Maurice Bryson",
+          "role": "Founder"
+        }
+      ]
+    },
+    "thunderstone": {
+      "canonical_name": "Thunderstone",
+      "fellows": [
+        {
+          "name": "Eric Wasson Burns",
+          "role": "CEO"
+        }
+      ]
+    },
+    "renewco2": {
+      "canonical_name": "RenewCO2",
+      "fellows": [
+        {
+          "name": "Karin Calvinho",
+          "role": "CTO"
+        },
+        {
+          "name": "Anders Laursen",
+          "role": "CEO & President"
+        }
+      ]
+    },
+    "aspiring materials": {
+      "canonical_name": "Aspiring Materials",
+      "fellows": [
+        {
+          "name": "Mark Chadderton",
+          "role": "CEO"
+        },
+        {
+          "name": "Chris Oze",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "powernap energy": {
+      "canonical_name": "PowerNaP Energy",
+      "fellows": [
+        {
+          "name": "Giselle Cheung",
+          "role": "CEO"
+        },
+        {
+          "name": "Benjamin Rupert",
+          "role": "CTO"
+        }
+      ]
+    },
+    "loamist": {
+      "canonical_name": "Loamist",
+      "fellows": [
+        {
+          "name": "Pete Christensen",
+          "role": "COO"
+        },
+        {
+          "name": "Andy Miller",
+          "role": "CEO"
+        }
+      ]
+    },
+    "c star": {
+      "canonical_name": "C STAR",
+      "fellows": [
+        {
+          "name": "Michael Claeys",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Nico Fischer",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Wijnand Marquart",
+          "role": "Operations Lead"
+        }
+      ]
+    },
+    "hoofprint biome": {
+      "canonical_name": "Hoofprint Biome",
+      "fellows": [
+        {
+          "name": "Scott Collins",
+          "role": "CSO"
+        },
+        {
+          "name": "Kathryn Polkoff",
+          "role": "CEO"
+        }
+      ]
+    },
+    "mantel": {
+      "canonical_name": "Mantel",
+      "fellows": [
+        {
+          "name": "Danielle Colson",
+          "role": "Co-Founder & COO"
+        },
+        {
+          "name": "Cameron Halliday",
+          "role": "Co-Founder & CEO"
+        },
+        {
+          "name": "Sean Robertson",
+          "role": "Co-Founder & CTO"
+        }
+      ]
+    },
+    "wattair": {
+      "canonical_name": "WattAir",
+      "fellows": [
+        {
+          "name": "Bachir El Fil",
+          "role": "CSO"
+        },
+        {
+          "name": "Josephy Mooney",
+          "role": "Co-Founder & CEO"
+        }
+      ]
+    },
+    "rarefied": {
+      "canonical_name": "Rarefied",
+      "fellows": [
+        {
+          "name": "Angela Feldhaus",
+          "role": "CEO"
+        },
+        {
+          "name": "Ben Schafer",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "macrocycle technologies": {
+      "canonical_name": "MacroCycle Technologies",
+      "fellows": [
+        {
+          "name": "Stwart Peña Feliz",
+          "role": "Co-Founder & CEO"
+        },
+        {
+          "name": "Jan-Georg Rosenboom",
+          "role": "Co-Founder & CTO"
+        }
+      ]
+    },
+    "voluna": {
+      "canonical_name": "Voluna",
+      "fellows": [
+        {
+          "name": "Elias Fernandini",
+          "role": "COO"
+        },
+        {
+          "name": "Aaron Olson",
+          "role": "CTO"
+        },
+        {
+          "name": "Al Strange",
+          "role": "CEO"
+        }
+      ]
+    },
+    "beyond silicon": {
+      "canonical_name": "Beyond Silicon",
+      "fellows": [
+        {
+          "name": "Mathilde Fievez",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Jason Yu",
+          "role": "CEO"
+        }
+      ]
+    },
+    "mars materials": {
+      "canonical_name": "Mars Materials",
+      "fellows": [
+        {
+          "name": "Aaron Fitzgerald",
+          "role": "CEO & Co-Founder"
+        },
+        {
+          "name": "Kristian Gubsch",
+          "role": "Vice President of Feedstock Development & Co-Founder"
+        }
+      ]
+    },
+    "cert systems": {
+      "canonical_name": "CERT Systems",
+      "fellows": [
+        {
+          "name": "Christine Gabardo",
+          "role": "CTO & COO"
+        },
+        {
+          "name": "Alex Ip",
+          "role": "CEO"
+        }
+      ]
+    },
+    "electroflow technologies": {
+      "canonical_name": "Electroflow Technologies",
+      "fellows": [
+        {
+          "name": "Evan Gardner",
+          "role": "Co-Founder & CTO"
+        },
+        {
+          "name": "Eric McShane",
+          "role": "Co-Founder & CEO"
+        }
+      ]
+    },
+    "everbloom": {
+      "canonical_name": "Everbloom",
+      "fellows": [
+        {
+          "name": "Simardev Gulati",
+          "role": "CEO"
+        },
+        {
+          "name": "Michael Jaffe",
+          "role": "CTO"
+        }
+      ]
+    },
+    "unemit": {
+      "canonical_name": "Unemit",
+      "fellows": [
+        {
+          "name": "Christian Haakonsen",
+          "role": "Founder"
+        }
+      ]
+    },
+    "photara": {
+      "canonical_name": "Photara",
+      "fellows": [
+        {
+          "name": "Brian Hardin",
+          "role": "CEO & Co-Founder"
+        },
+        {
+          "name": "Max L'Etoile",
+          "role": "CTO & Co-Founder"
+        }
+      ]
+    },
+    "crectech": {
+      "canonical_name": "CRecTech",
+      "fellows": [
+        {
+          "name": "Kok Giap HAW",
+          "role": "Co-Founder & CTO"
+        },
+        {
+          "name": "Kang Hui LIM",
+          "role": "Co-Founder & CEO"
+        }
+      ]
+    },
+    "hgen": {
+      "canonical_name": "Hgen",
+      "fellows": [
+        {
+          "name": "Colin Ho",
+          "role": "CTO & Co-Founder"
+        },
+        {
+          "name": "Molly Yang",
+          "role": "CEO"
+        }
+      ]
+    },
+    "chement": {
+      "canonical_name": "Chement",
+      "fellows": [
+        {
+          "name": "Gregory Houchins",
+          "role": "CEO"
+        }
+      ]
+    },
+    "phycobloom": {
+      "canonical_name": "Phycobloom",
+      "fellows": [
+        {
+          "name": "Ian Hu",
+          "role": "CTO"
+        },
+        {
+          "name": "John Waite",
+          "role": "CEO"
+        }
+      ]
+    },
+    "verne": {
+      "canonical_name": "Verne",
+      "fellows": [
+        {
+          "name": "David Jaramillo",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Ted Mcklveen",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Bav Roy",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "entropy lab": {
+      "canonical_name": "Entropy Lab",
+      "fellows": [
+        {
+          "name": "Fei Jipeng",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "See Wee Koh",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "path power": {
+      "canonical_name": "Path Power",
+      "fellows": [
+        {
+          "name": "Zachary Judkins",
+          "role": "CEO"
+        }
+      ]
+    },
+    "advanced agriscience": {
+      "canonical_name": "Advanced Agriscience",
+      "fellows": [
+        {
+          "name": "Collin Juurakko",
+          "role": "CEO"
+        }
+      ]
+    },
+    "aikido technologies": {
+      "canonical_name": "Aikido Technologies",
+      "fellows": [
+        {
+          "name": "Sam Kanner",
+          "role": "CEO"
+        },
+        {
+          "name": "James Reeves",
+          "role": "Chief Scientist"
+        },
+        {
+          "name": "Bingbin Yu",
+          "role": "Co-founder"
+        }
+      ]
+    },
+    "cemvision": {
+      "canonical_name": "CemVision",
+      "fellows": [
+        {
+          "name": "Claes Kollberg",
+          "role": "CTO"
+        },
+        {
+          "name": "Paul Sandberg",
+          "role": "Co-Founder, Product and Innovation"
+        }
+      ]
+    },
+    "queens carbon": {
+      "canonical_name": "Queens Carbon",
+      "fellows": [
+        {
+          "name": "Daniel Kopp",
+          "role": "Co-Founder & CEO/CTO"
+        }
+      ]
+    },
+    "clear skies h2": {
+      "canonical_name": "Clear Skies H2",
+      "fellows": [
+        {
+          "name": "Anthony Ku",
+          "role": "CEO"
+        },
+        {
+          "name": "Jimmy Li",
+          "role": "CTO"
+        }
+      ]
+    },
+    "takachar": {
+      "canonical_name": "Takachar",
+      "fellows": [
+        {
+          "name": "Kevin Kung",
+          "role": "Co-Founder & CTO"
+        },
+        {
+          "name": "Vidyut Mohan",
+          "role": "Co-Founder & CEO"
+        }
+      ]
+    },
+    "dioxycle": {
+      "canonical_name": "Dioxycle",
+      "fellows": [
+        {
+          "name": "Sarah Lamaison",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "David Wakerley",
+          "role": "Co-Founder & CTO"
+        }
+      ]
+    },
+    "green cop": {
+      "canonical_name": "Green COP",
+      "fellows": [
+        {
+          "name": "Hanson Lee",
+          "role": "CEO, Co-Founder"
+        },
+        {
+          "name": "Wang Chang Low",
+          "role": "COO, Co-Founder"
+        },
+        {
+          "name": "Yee Ching Sng",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "terra oleo": {
+      "canonical_name": "Terra Oleo",
+      "fellows": [
+        {
+          "name": "Shen Ming Lee",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Boon Uranukul",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "calion": {
+      "canonical_name": "Calion",
+      "fellows": [
+        {
+          "name": "Drew Lilley",
+          "role": "Co-Founder & CEO"
+        }
+      ]
+    },
+    "novel farms": {
+      "canonical_name": "Novel Farms",
+      "fellows": [
+        {
+          "name": "Michelle Lu",
+          "role": "Co-Founder & CSO"
+        },
+        {
+          "name": "Nieves Martinez Marshall",
+          "role": "Co-Founder & CEO"
+        }
+      ]
+    },
+    "deepcycle eco": {
+      "canonical_name": "DeepCycle Eco",
+      "fellows": [
+        {
+          "name": "He-Kuan Luo",
+          "role": "Co-Founder"
+        },
+        {
+          "name": "Zhongxing Zhang",
+          "role": "Co-Founder"
+        }
+      ]
+    },
+    "vertility health": {
+      "canonical_name": "Vertility Health",
+      "fellows": [
+        {
+          "name": "Bonnie Maven",
+          "role": "CEO"
+        }
+      ]
+    },
+    "every electric": {
+      "canonical_name": "Every Electric",
+      "fellows": [
+        {
+          "name": "Richard May",
+          "role": "CTO"
+        },
+        {
+          "name": "Andrew Wang",
+          "role": "CEO"
+        }
+      ]
+    },
+    "gallox semiconductors": {
+      "canonical_name": "Gallox Semiconductors",
+      "fellows": [
+        {
+          "name": "Jon McCandless",
+          "role": "Co-Founder & CEO"
+        }
+      ]
+    },
+    "hertha metals": {
+      "canonical_name": "Hertha Metals",
+      "fellows": [
+        {
+          "name": "Laureen Meroueh",
+          "role": "Founder"
+        }
+      ]
+    },
+    "barocal": {
+      "canonical_name": "Barocal",
+      "fellows": [
+        {
+          "name": "Xavier Moya",
+          "role": "Founder & Director"
+        }
+      ]
+    },
+    "furno": {
+      "canonical_name": "Furno",
+      "fellows": [
+        {
+          "name": "Gurinder Nagra",
+          "role": "Founder"
+        }
+      ]
+    },
+    "liquium": {
+      "canonical_name": "Liquium",
+      "fellows": [
+        {
+          "name": "Franck Natali",
+          "role": "Co-Founder & CTO"
+        }
+      ]
+    },
+    "arinna": {
+      "canonical_name": "Arinna",
+      "fellows": [
+        {
+          "name": "Koosha Nassiri Nazif",
+          "role": "CEO"
+        },
+        {
+          "name": "Alexander Shearer",
+          "role": "CTO"
+        }
+      ]
+    },
+    "litherm technologies": {
+      "canonical_name": "Litherm Technologies",
+      "fellows": [
+        {
+          "name": "Felix Nelles",
+          "role": "Co-Founder & Managing Director"
+        }
+      ]
+    },
+    "liftoff technology": {
+      "canonical_name": "LiftOFF Technology",
+      "fellows": [
+        {
+          "name": "Lorenz Olbrich",
+          "role": "CEO"
+        }
+      ]
+    },
+    "phase biolabs": {
+      "canonical_name": "Phase Biolabs",
+      "fellows": [
+        {
+          "name": "David Ortega",
+          "role": "CEO & CTO"
+        }
+      ]
+    },
+    "geokiln": {
+      "canonical_name": "GeoKiln",
+      "fellows": [
+        {
+          "name": "Lorna Ortiz",
+          "role": "COO"
+        },
+        {
+          "name": "Alexei Tcherniak",
+          "role": "CEO"
+        }
+      ]
+    },
+    "olokun minerals": {
+      "canonical_name": "Olokun Minerals",
+      "fellows": [
+        {
+          "name": "Lacey Reddix",
+          "role": "CEO"
+        },
+        {
+          "name": "Pilanda Watkins-Curry",
+          "role": "Co-Founder & CTO"
+        }
+      ]
+    },
+    "lincore": {
+      "canonical_name": "Lincore",
+      "fellows": [
+        {
+          "name": "Saikiran Reddy",
+          "role": "CEO"
+        },
+        {
+          "name": "Wang Xun",
+          "role": "CTO"
+        }
+      ]
+    },
+    "arculus solutions": {
+      "canonical_name": "Arculus Solutions",
+      "fellows": [
+        {
+          "name": "Gianluca Roscioli",
+          "role": "CEO"
+        }
+      ]
+    },
+    "marathon fusion": {
+      "canonical_name": "Marathon Fusion",
+      "fellows": [
+        {
+          "name": "Adam Rutkowski",
+          "role": "CTO"
+        },
+        {
+          "name": "Kyle Schiller",
+          "role": "CEO"
+        }
+      ]
+    },
+    "metpeel": {
+      "canonical_name": "MetPeel",
+      "fellows": [
+        {
+          "name": "Dinakar Sagapuram",
+          "role": "Assistant Professor & Inventor"
+        }
+      ]
+    },
+    "rift": {
+      "canonical_name": "RIFT",
+      "fellows": [
+        {
+          "name": "Lex Scheepers",
+          "role": "Co-Founder & CTO"
+        },
+        {
+          "name": "Vincent Seijger",
+          "role": "Co-Founder & CTO"
+        },
+        {
+          "name": "Mark Verhagen",
+          "role": "CEO"
+        }
+      ]
+    },
+    "celluol": {
+      "canonical_name": "Celluol",
+      "fellows": [
+        {
+          "name": "Philippe Soucaille",
+          "role": "CTO"
+        },
+        {
+          "name": "Tom Wilding-Steele",
+          "role": "CEO"
+        }
+      ]
+    },
+    "stepfunction": {
+      "canonical_name": "StepFunction",
+      "fellows": [
+        {
+          "name": "David Tew",
+          "role": "Founder & CEO"
+        }
+      ]
+    },
+    "gencores inc": {
+      "canonical_name": "Gencores, Inc.",
+      "fellows": [
+        {
+          "name": "Jules Thiery",
+          "role": "Founder & CEO"
+        }
+      ]
+    },
+    "holocene": {
+      "canonical_name": "Holocene",
+      "fellows": [
+        {
+          "name": "Anca Timofte",
+          "role": "CEO & Co-founder"
+        }
+      ]
+    },
+    "chemfinity technologies": {
+      "canonical_name": "ChemFinity Technologies",
+      "fellows": [
+        {
+          "name": "Adam Uliana",
+          "role": "CEO & Co-founder"
+        },
+        {
+          "name": "Ever Velasquez",
+          "role": "CTO & Co-founder"
+        }
+      ]
+    },
+    "ferrum technologies": {
+      "canonical_name": "Ferrum Technologies",
+      "fellows": [
+        {
+          "name": "Andreas Carl Weber",
+          "role": "Founder & CEO"
+        }
+      ]
+    },
+    "othersphere": {
+      "canonical_name": "Othersphere",
+      "fellows": [
+        {
+          "name": "Matthew Hammond",
+          "role": "business"
+        },
+        {
+          "name": "Robert Murphy",
+          "role": "Business"
+        }
+      ]
+    }
+  },
+  "meta": {
+    "total_fellows": 144,
+    "total_companies": 78,
+    "source_file": "/Users/isaiah.tsau/ion_take_home/data/reference/be_fellows_2026_raw.txt",
+    "generated_at": "2026-05-02T15:49:34.203423+00:00"
+  }
+}

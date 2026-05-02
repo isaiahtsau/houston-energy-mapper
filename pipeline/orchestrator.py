@@ -63,6 +63,7 @@ def _build_harvester_registry() -> dict[str, type]:
     from harvest.rbpc_alumni import RbpcAlumniHarvester
     from harvest.lowercarbon import LowercarbonHarvester
     from harvest.dcvc import DcvcHarvester
+    from harvest.bev_portfolio import BevPortfolioHarvester
     return {
         "rice_etvf": RiceEtvfHarvester,
         "innovationmap_rss": InnovationMapRssHarvester,
@@ -75,6 +76,7 @@ def _build_harvester_registry() -> dict[str, type]:
         "rbpc_alumni": RbpcAlumniHarvester,
         "lowercarbon": LowercarbonHarvester,
         "dcvc": DcvcHarvester,
+        "bev_portfolio": BevPortfolioHarvester,
     }
 
 

@@ -988,13 +988,47 @@ def score_founder_pedigree(
     )
 
 
+def _get_be_fellows_names(company_name: str) -> frozenset[str]:
+    """Return lowercased founder names from the BE Fellows 2026 roster for *company_name*.
+
+    Lazy-imports be_fellows_lookup to avoid circular imports. Returns empty
+    frozenset on any error (lookup is best-effort, non-blocking).
+    """
+    try:
+        from enrich.be_fellows_lookup import lookup_company_for_fellow_match
+        fellows = lookup_company_for_fellow_match(company_name)
+        return frozenset(f["name"].lower() for f in fellows)
+    except Exception as exc:  # pragma: no cover
+        logger.debug(f"[founder_pedigree:be_fellows-error] {exc}")
+        return frozenset()
+
+
 def score_company_founders(company: CompanyRecord) -> list[FounderPedigree]:
-    """Score all founders listed in company.founders."""
+    """Score all founders listed in company.founders.
+
+    For each founder, checks the BE Fellows 2026 roster via
+    enrich.be_fellows_lookup. If the founder's name appears in the roster
+    for this company, "Breakthrough Energy Fellow" is appended to their bio
+    text so that detect_fellowship() fires the B4/fellowship_very_high signal.
+    """
     results: list[FounderPedigree] = []
+    be_fellow_names = _get_be_fellows_names(company.name)
+
     for founder in company.founders:
+        founder_name = founder.get("name", "Unknown")
+        bio_text = founder.get("bio_text", "")
+
+        # Inject BE Fellow B4 signal when confirmed via reference data
+        if founder_name.lower() in be_fellow_names:
+            bio_text = (bio_text + " Breakthrough Energy Fellow 2026").strip()
+            logger.debug(
+                f"[founder_pedigree:be_fellows] Injected BE Fellow signal for "
+                f"{founder_name!r} at {company.name!r}"
+            )
+
         pedigree = score_founder_pedigree(
-            founder_name=founder.get("name", "Unknown"),
-            bio_text=founder.get("bio_text", ""),
+            founder_name=founder_name,
+            bio_text=bio_text,
             role=founder.get("role", "Other"),
             company_id=company.company_id,
             company_licensed_ip_labs=company.licensed_ip_labs or [],

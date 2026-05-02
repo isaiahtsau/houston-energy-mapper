@@ -2,7 +2,7 @@
 
 **Purpose:** Master catalog of harvest sources for the Houston Energy Mapper pipeline.
 **Drives:** `harvest/*.py` modules and `pipeline/orchestrator.py` source registry.
-**Version:** v8
+**Version:** v9
 **Last updated:** 2026-05-02
 
 ---
@@ -377,14 +377,14 @@ These sources surface Tier B and Tier C candidates: companies operating outside 
 | Auth required | No |
 | Update cadence | quarterly |
 | Expected yield | 30-60 (~200-400 portfolio companies total; ~30-60 with Houston operational signal) |
-| v1 status | partially implemented (Step 9 Batch 4: Lowercarbon + DCVC; BEV deferred Phase 2) |
+| v1 status | partially implemented (Step 9 Batch 4+follow-up: Lowercarbon + DCVC + BEV) |
 
-**Implementation note.** Individual harvester modules used instead of config-driven Path B pattern (Lowercarbon and DCVC have sufficiently different HTML structures to warrant separate parsers). BEV blocked by Akamai WAF — see `breakthrough_energy_fellows_directory` deferral note for same blocker details.
+**Implementation note.** Individual harvester modules used instead of config-driven Path B pattern (Lowercarbon, DCVC, and BEV have sufficiently different HTML structures to warrant separate parsers).
 
 **Sub-sources (priority by Houston-deal-flow density):**
 
 1. **Lowercarbon Capital** *(implemented: harvest/lowercarbon.py — 103 records)*
-2. **Breakthrough Energy Ventures** *(deferred Phase 2 — Akamai WAF 403)*
+2. **Breakthrough Energy Ventures** *(implemented: harvest/bev_portfolio.py — ~206 records; live access WAF-conditional: breakthroughenergy.org/portfolio returns 200 when Akamai CDN cache is warm; may return 403 on cache miss or IP-block)*
 3. **DCVC** *(implemented: harvest/dcvc.py — 289 records)*
 4. Energy Impact Partners (EIP) *(deferred Step 11+)*
 5. Prelude Ventures *(deferred Step 11+)*
@@ -448,9 +448,11 @@ These sources surface Tier B and Tier C candidates: companies operating outside 
 | Auth required | No |
 | Update cadence | annual |
 | Expected yield | 150-180 (~150-180 fellows across ~5 cohorts) |
-| v1 status | deferred (Phase 2 — Akamai WAF 403 on all paths) |
+| v1 status | partially implemented — 2026 cohort static reference (enrich/be_fellows_lookup.py); live directory harvester deferred Phase 2 |
 
-**Deferral rationale (confirmed Step 9 Batch 4, 2026-05-02).** breakthroughenergy.org returns Akamai EdgeSuite WAF 403 "Access Denied" on every path attempted (`/fellows`, `/our-work/fellows`, `/our-work/breakthrough-energy-ventures`, `/portfolio`). SSL certificate chain also fails verification in automated HTTP clients. No publicly accessible directory structure confirmed.
+**Static reference implementation (Step 9 Batch 4 follow-up, 2026-05-02).** The 2026 BE Fellows cohort roster (78 companies, 144 fellows) was provided as a static reference file (`data/reference/be_fellows_2026_raw.txt`) and is now implemented as `enrich/be_fellows_lookup.py`. The lookup exposes `lookup_company_for_fellow_match(company_name)` with exact + fuzzy matching. It is integrated into `enrich/founder_pedigree.py` `score_company_founders()` as a B4 signal injection: when a founder's name appears in the BE Fellows 2026 roster, "Breakthrough Energy Fellow" is appended to their bio text so `detect_fellowship()` fires the `fellowship_very_high` signal. Structured JSON persisted at `data/reference/be_fellows_structured.json`.
+
+**Live directory deferral.** breakthroughenergy.org returns Akamai EdgeSuite WAF 403 "Access Denied" on every path attempted (`/fellows`, `/our-work/fellows`, `/our-work/breakthrough-energy-ventures`, `/portfolio`). SSL certificate chain also fails verification in automated HTTP clients.
 
 **Phase 2 work:** Browser automation with realistic TLS fingerprint (e.g., curl-impersonate or Playwright with full browser profile). Alternatively, source BEF portfolio data from Crunchbase/PitchBook API using "Breakthrough Energy" as investor filter.
 
@@ -662,12 +664,12 @@ These were considered during scoping and explicitly descoped. Documenting the *w
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| Implemented (v1) | 23 | 12 Tier 1 standalone (incl. greentown_houston, energytech_nexus) + 2 Tier 2 standalone + 0 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups |
-| Deferred (Phase 2) | 25 | 7 standalone sources (incl. etv_portfolio, activate_houston) + 9 corporate VC sub-sources + 7 national climate VC remainder + 2 previously deferred standalone |
+| Implemented (v1) | 25 | 12 Tier 1 standalone (incl. greentown_houston, energytech_nexus) + 2 Tier 2 standalone + 0 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups + BEV portfolio + BE Fellows static reference |
+| Deferred (Phase 2) | 23 | 7 standalone sources (incl. etv_portfolio, activate_houston) + 9 corporate VC sub-sources + 5 national climate VC remainder + 2 previously deferred standalone |
 | Stretch (Phase 2+) | 1 | USPTO stealth discovery (Phase 2 — Step 13+; defer until dedup layer is mature) |
 | Considered + excluded | 4 categories | Social, paid databases, TMC, event rosters |
 
-**Total source universe considered:** 23 implemented + 25 deferred + 1 stretch = 49 active sources + 4 excluded categories = 53 distinct decisions documented.
+**Total source universe considered:** 25 implemented + 23 deferred + 1 stretch = 49 active sources + 4 excluded categories = 53 distinct decisions documented.
 
 ---
 
@@ -683,6 +685,8 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 ---
 
 ## Changelog
+
+- **v9** (2026-05-02): Step 9 Batch 4 follow-up — BEV portfolio + BE Fellows static reference. `bev_portfolio`: status updated from deferred to implemented (`harvest/bev_portfolio.py`; Nuxt 3 SSR harvester extracting `window.__INITIAL_STATE__` via `json.JSONDecoder.raw_decode()` + recursive `system.type == "company"` walk; ~206 records; live access is WAF-conditional — Akamai CDN returns 200 when cache is warm, 403 otherwise). `breakthrough_energy_fellows_directory`: status updated from deferred to partially implemented — 2026 cohort static reference available as `enrich/be_fellows_lookup.py` (78 companies, 144 fellows; exact + fuzzy lookup; B4 signal injected into `score_company_founders()` in `enrich/founder_pedigree.py`); live web scraper remains deferred. Summary: implemented 23 → 25; deferred 25 → 23.
 
 - **v6** (2026-05-02): Step 9 Batch 2 source corrections. `greentown_houston`: URL corrected from `/houston/` (marketing page) to `/members/?hq=houston` (member directory); access pattern corrected — directory is AJAX-loaded but POST endpoint is public and requires no Playwright; yield revised from `80-120` to `200-280` (245 Houston members confirmed at build time). `energytech_nexus` reassigned to deferred (Phase 2): org rebranded as Energytech Cypher March 2026; `energytechcypher.com/members` returns 403; known COPILOT cohort companies documented. `activate_houston` reassigned to deferred (Phase 2): `activate.org/houston` is 404; directory at `activate.org/activate-companies` uses Softr iframe with dynamically injected src (needs Playwright); scrape_method corrected from `static_html` to `headless_html`.
 
