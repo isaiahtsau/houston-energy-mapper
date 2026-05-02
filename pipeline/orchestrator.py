@@ -53,8 +53,12 @@ def _get_run_id() -> str:
 def _build_harvester_registry() -> dict[str, type]:
     """Build the harvester registry on first use (lazy import avoids heavy deps at startup)."""
     from harvest.rice_etvf import RiceEtvfHarvester
+    from harvest.innovationmap_rss import InnovationMapRssHarvester
+    from harvest.halliburton_labs import HalliburtonLabsHarvester
     return {
         "rice_etvf": RiceEtvfHarvester,
+        "innovationmap_rss": InnovationMapRssHarvester,
+        "halliburton_labs": HalliburtonLabsHarvester,
     }
 
 

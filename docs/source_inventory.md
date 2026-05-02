@@ -2,8 +2,8 @@
 
 **Purpose:** Master catalog of harvest sources for the Houston Energy Mapper pipeline.
 **Drives:** `harvest/*.py` modules and `pipeline/orchestrator.py` source registry.
-**Version:** v3
-**Last updated:** 2026-04-30
+**Version:** v4
+**Last updated:** 2026-05-02
 
 ---
 
@@ -80,16 +80,16 @@ These are the highest-signal sources for Tier A and Tier B-high companies. Houst
 | Field | Value |
 |-------|-------|
 | Type | accelerator |
-| URL | https://halliburtonlabs.com/portfolio/ |
+| URL | https://halliburtonlabs.com/companies/ |
 | Houston tier reach | A, B-high |
 | Scrape method | static_html |
-| Scrape depth | listing_plus_detail |
+| Scrape depth | single_page |
 | Auth required | No |
 | Update cadence | quarterly; rolling cohorts with ~quarterly announcements |
-| Expected yield | 30-50 (~30-50 companies cumulative; 5-10 new per quarter) |
+| Expected yield | 35-50 (~35-50 companies cumulative; first live run: 42 records — 12 current + 30 alumni) |
 | v1 status | implemented (Step 7) |
 
-**Notes.** Halliburton's industrial accelerator. Strong B-high signal — company physical presence at Halliburton Labs Houston facility counts as a HIGH operational Houston presence signal.
+**Notes.** Halliburton's industrial accelerator (cohort-based, not equity-driven). Strong B-high signal — company physical presence at Halliburton Labs Houston facility counts as a HIGH operational Houston presence signal. Listing-only pattern: no detail pages; all data (name, description, website, location, cohort type) on the single companies page. Cohort type (current vs. alumni) derived from CSS gradient class (warm-gradient=current, cool-gradient=alumni). URL correction from spec: `/portfolio/` returns 404; canonical URL is `/companies/`.
 
 ---
 
@@ -170,16 +170,16 @@ These are the highest-signal sources for Tier A and Tier B-high companies. Houst
 | Field | Value |
 |-------|-------|
 | Type | rss_feed |
-| URL | https://www.innovationmap.com/feed/ |
+| URL | https://houston.innovationmap.com/feeds/feed.rss |
 | Houston tier reach | A, B-high, B |
 | Scrape method | rss_feed |
 | Scrape depth | single_page |
 | Auth required | No |
-| Update cadence | realtime; multiple posts per day |
-| Expected yield | 20-40 (~80-150 company mentions per quarter; ~20-40 new venture-scale candidates) |
+| Update cadence | daily; multiple posts per day |
+| Expected yield | 0-20 per run (~20-50 unique companies per quarter over weekly cadence) |
 | v1 status | implemented (Step 7) |
 
-**Notes.** Pre-filtered for Houston relevance — every article is Houston-focused. Strong source for surfacing companies before they appear in accelerator portfolios.
+**Notes.** Recency-discovery harvester, not a directory harvester. Per-run yield is intentionally low (0–20): a single snapshot of the rolling 30-article window. Value is real-time freshness — running weekly, this source surfaces energy startups at the moment of a funding announcement or product launch, often months before they appear in formal accelerator/portfolio listings. Accumulated quarterly yield is 20–50 unique companies. Energy filter applied to article titles (title keyword match is more precise than category-based on this feed; categories are largely company names and bylines, not topic taxonomy). Company links extracted from article bodies; generic anchor text ("news release", "press release", "here") falls back to domain name; academic/gov/news domains excluded from company extraction. URL correction from spec: `www.innovationmap.com/feed/` returns 404 after redirect; canonical feed URL is `houston.innovationmap.com/feeds/feed.rss`.
 
 ---
 
@@ -659,6 +659,8 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 
 ## Changelog
 
+- **v4** (2026-05-02): URL corrections for `innovationmap_rss` and `halliburton_labs` discovered during pre-implementation inspection before code was written. `innovationmap_rss`: URL changed from `www.innovationmap.com/feed/` (404 after redirect) to `houston.innovationmap.com/feeds/feed.rss`; yield range adjusted to `0-20` per run (snapshot of 30-article rolling window; cumulative quarterly yield 20-50); notes expanded with recency-discovery design rationale. `halliburton_labs`: URL changed from `/portfolio/` (404) to `/companies/`; scrape depth corrected from `listing_plus_detail` to `single_page` (no detail pages exist; all data on listing); SOURCE_TYPE corrected from `corporate_vc` to `accelerator` (cohort-based mentorship program, not equity-driven VC fund); yield range updated to `35-50` based on live run (42 records). Two harvester robustness improvements landed during live run: academic/gov domain skip list added to `innovationmap_rss` (pnas.org, uh.edu, nasa.gov, energy.gov, etc.); generic anchor text fallback to domain name (handles "news release", "press release", "here" anchors that point to company URLs).
+
 - **v3** (2026-04-30): `rice_alliance` renamed to `rice_etvf` after pre-implementation inspection revealed alliance.rice.edu archive aggregates ETVF participants without RACEA-specific tagging; ricecleanenergy.org portfolio is JavaScript-rendered and requires Playwright. RACEA-specific harvester added as new deferred source `rice_alliance_racea` (Step 7+ pending headless_html pattern). `rice_etvf` Type updated to `event`; URL changed to ETVF year-pattern; Houston tier reach broadened to A/A-low/B-high/B to reflect mixed participant pool; `EXPECTED_YIELD` revised to `80-240` (2025 cohort: 99 records; 2022-2025 combined: 202 records). Summary: deferred count bumped 17→18; total universe 45→46. Dual-record note added: same company may appear as listing-only (2022-2023) and profile (2024+).
 
 - **v2** (2026-04-29):
@@ -681,4 +683,5 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 |---------|------|-------------|---------|
 | v1 | 2026-04-29 | Claude (agent) | 10 concerns raised: Step 12 collision (USPTO vs. export), config-driven multi-source harvester architecture, undeclared Type vocabulary members, undeclared Update cadence members, ERCOT stage ambiguity (harvest vs. enrichment filter), ERCOT manual vs. programmatic fetch, unverified `etv_portfolio` URL, `EXPECTED_YIELD` format mismatch with base class, summary count discrepancy (13 vs. actual), `config/corporate_vc_sources.yaml` prerequisite |
 | v2 | 2026-04-29 | User | All 10 concerns resolved + 2 cross-cutting additions (scrape_depth field, scrape method taxonomy); amendments applied as changelog above |
+| v4 | 2026-05-02 | User | `innovationmap_rss` and `halliburton_labs` URL corrections; `halliburton_labs` SOURCE_TYPE corrected to `accelerator`; yield ranges updated from live run data; two robustness improvements from live run documented. |
 | v3 | 2026-04-30 | User | `rice_alliance` renamed to `rice_etvf`; `rice_alliance_racea` added as deferred. Pre-implementation inspection caught alliance.rice.edu aggregation pattern and RACEA URL change before code was written. |
