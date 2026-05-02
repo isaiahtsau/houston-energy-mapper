@@ -1,0 +1,37 @@
+{
+  "hits": {
+    "total": {"value": 3},
+    "hits": [
+      {
+        "_source": {
+          "display_names": ["GREENTOWN LABS HOUSTON LLC  (CIK 0002001234)"],
+          "adsh": "0002001234-24-000001",
+          "ciks": ["0002001234"],
+          "file_date": "2024-03-15",
+          "biz_locations": ["Houston, TX"],
+          "items": ["06B"]
+        }
+      },
+      {
+        "_source": {
+          "display_names": ["VINSON & ELKINS LLP  (CIK 0001005678)"],
+          "adsh": "0001005678-24-000002",
+          "ciks": ["0001005678"],
+          "file_date": "2024-04-01",
+          "biz_locations": ["Houston, TX"],
+          "items": ["06B", "01"]
+        }
+      },
+      {
+        "_source": {
+          "display_names": ["ION ENERGY VENTURES INC  (CIK 0001009999)"],
+          "adsh": "0001009999-24-000003",
+          "ciks": ["0001009999"],
+          "file_date": "2024-05-10",
+          "biz_locations": ["Houston, TX"],
+          "items": ["01", "03"]
+        }
+      }
+    ]
+  }
+}

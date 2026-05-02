@@ -64,6 +64,8 @@ def _build_harvester_registry() -> dict[str, type]:
     from harvest.lowercarbon import LowercarbonHarvester
     from harvest.dcvc import DcvcHarvester
     from harvest.bev_portfolio import BevPortfolioHarvester
+    from harvest.sec_edgar import SecEdgarFormDHarvester
+    from harvest.ercot_queue import ErcotQueueHarvester
     return {
         "rice_etvf": RiceEtvfHarvester,
         "innovationmap_rss": InnovationMapRssHarvester,
@@ -77,6 +79,8 @@ def _build_harvester_registry() -> dict[str, type]:
         "lowercarbon": LowercarbonHarvester,
         "dcvc": DcvcHarvester,
         "bev_portfolio": BevPortfolioHarvester,
+        "sec_edgar": SecEdgarFormDHarvester,
+        "ercot_queue": ErcotQueueHarvester,
     }
 
 

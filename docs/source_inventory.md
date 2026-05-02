@@ -2,7 +2,7 @@
 
 **Purpose:** Master catalog of harvest sources for the Houston Energy Mapper pipeline.
 **Drives:** `harvest/*.py` modules and `pipeline/orchestrator.py` source registry.
-**Version:** v9
+**Version:** v11
 **Last updated:** 2026-05-02
 
 ---
@@ -384,7 +384,7 @@ These sources surface Tier B and Tier C candidates: companies operating outside 
 **Sub-sources (priority by Houston-deal-flow density):**
 
 1. **Lowercarbon Capital** *(implemented: harvest/lowercarbon.py — 103 records)*
-2. **Breakthrough Energy Ventures** *(implemented: harvest/bev_portfolio.py — ~206 records; live access WAF-conditional: breakthroughenergy.org/portfolio returns 200 when Akamai CDN cache is warm; may return 403 on cache miss or IP-block)*
+2. **Breakthrough Energy Ventures** *(implemented (data-blocked): harvest/bev_portfolio.py coded and fixture-tested; ~206 records when accessible; live runs currently blocked by Akamai WAF from this machine — awaiting Phase 2 WAF bypass)*
 3. **DCVC** *(implemented: harvest/dcvc.py — 289 records)*
 4. Energy Impact Partners (EIP) *(deferred Step 11+)*
 5. Prelude Ventures *(deferred Step 11+)*
@@ -528,7 +528,9 @@ These are the highest-signal sources for venture-scale validation and Houston op
 | Auth required | No |
 | Update cadence | event_driven; award announcements and project milestones |
 | Expected yield | 30-60 (~30-60 sub-awardees / partners across Gulf Coast hubs) |
-| v1 status | implemented (Step 9 — Batch 5) |
+| v1 status | deferred (data-blocked — Cloudflare 403 on energy.gov/oced at build time; awaiting Phase 2 bypass) |
+
+**Deferral rationale.** Pre-implementation inspection (2026-05-02) confirmed `energy.gov/oced` returns Cloudflare 403 for automated requests. hyvelocityhub.com accessible, but DOE award PDFs require OCED base page for discovery. Deferred until Cloudflare-aware fetcher pattern established in Phase 2.
 
 **Notes.** Strongest non-Houston-HQ signal for Tier B-high. DOE OCED documents name technology providers, off-takers, and EPC partners with project locations. Houston-located projects are direct A/A-low candidates; out-of-state companies named in Houston-located projects are Tier B-high.
 
@@ -604,7 +606,9 @@ These are not standalone harvesters — they're enrichment-stage lookups used to
 | Auth required | No |
 | Update cadence | annual; rolling filing deadlines |
 | Expected yield | N/A (enrichment lookup — not bulk harvest) |
-| v1 status | implemented as enrichment lookup (Step 9 — Batch 5) |
+| v1 status | deferred (data-blocked — DOL EFAST search returns 403 for structured API queries at build time; awaiting Phase 2) |
+
+**Deferral rationale.** Pre-implementation inspection (2026-05-02) confirmed `efast.dol.gov/5500Search` REST API returns 403 for all structured JSON queries (including correct User-Agent). Public Form 5500 data accessible via DOL bulk CSV download (`askebsa.dol.gov/bulk`) but requires annual snapshot with no per-company lookup capability. Deferred until bulk-CSV enrichment pattern is established or API access restores.
 
 **Notes.** HIGH signal for Houston-HQ confirmation. Per-company lookup during enrichment, similar to Texas SOS franchise tax.
 
@@ -660,16 +664,17 @@ These were considered during scoping and explicitly descoped. Documenting the *w
 
 ## Summary by status
 
-**Counting rule:** "Implemented" includes any source with a v1 status of `implemented`, including enrichment lookups. Multi-source harvesters (`corporate_vc_arms`, `national_climate_vc_portfolios`) are counted by the number of sub-sources implemented in v1, not as 1 source. The same rule applies to deferred sub-sources.
+**Counting rule:** "Implemented and harvesting" = code complete AND data flowing in live runs. "Implemented as enrichment lookup" = per-company lookup used during enrichment stage, not a bulk harvester (no RawCompanyRecord output). "Implemented (data-blocked)" = code complete, tests passing, but live runs blocked by an external access constraint. "Deferred" = code not written. Multi-source harvesters (`corporate_vc_arms`, `national_climate_vc_portfolios`) are counted by the number of sub-sources, not as 1 source.
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| Implemented (v1) | 25 | 12 Tier 1 standalone (incl. greentown_houston, energytech_nexus) + 2 Tier 2 standalone + 0 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups + BEV portfolio + BE Fellows static reference |
-| Deferred (Phase 2) | 23 | 7 standalone sources (incl. etv_portfolio, activate_houston) + 9 corporate VC sub-sources + 5 national climate VC remainder + 2 previously deferred standalone |
-| Stretch (Phase 2+) | 1 | USPTO stealth discovery (Phase 2 — Step 13+; defer until dedup layer is mature) |
+| Implemented and harvesting | 13 | rice_etvf, innovationmap_rss, halliburton_labs, ecv_portfolio, goose_capital, greentown_houston, energytech_nexus, ion_district, rbpc_alumni (9 individual) + lowercarbon, dcvc (2 climate VC sub-sources) + sec_edgar, ercot_queue (2 Batch 5 additions) |
+| Implemented as enrichment lookup | 3 | be_fellows_lookup (B4 signal), texas_sos_lookup (houston_county_formation signal), job_feeds_lookup (houston_job_postings signal) |
+| Implemented (data-blocked) | 1 | BEV portfolio (Akamai WAF blocks .org from this machine; harvester coded + fixture-tested) |
+| Deferred (data-blocked) | 2 | doe_oced_hub_awards (Cloudflare 403 on energy.gov); form_5500_dol (DOL EFAST 403) |
+| Deferred (code not written) | 15+ | 7 standalone sources (incl. etv_portfolio, activate_houston) + 9 corporate VC sub-sources + 5 national climate VC remainder |
+| Stretch (Phase 2+) | 1 | USPTO stealth discovery (Step 13+; defer until dedup layer is mature) |
 | Considered + excluded | 4 categories | Social, paid databases, TMC, event rosters |
-
-**Total source universe considered:** 25 implemented + 23 deferred + 1 stretch = 49 active sources + 4 excluded categories = 53 distinct decisions documented.
 
 ---
 
@@ -685,6 +690,10 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 ---
 
 ## Changelog
+
+- **v11** (2026-05-02): Step 9 Batch 5 completions. `sec_edgar` (SecEdgarFormDHarvester) and `ercot_queue` (ErcotQueueHarvester) promoted to "implemented and harvesting" (live runs: 901 EDGAR Form D hits, 69 ERCOT Houston IA-signed records). `texas_sos_lookup` and `job_feeds_lookup` added as enrichment lookups. `doe_oced_hub_awards` status changed from "implemented" to "deferred (data-blocked)" — Cloudflare 403 on energy.gov/oced at build time. `form_5500_dol` status changed from "implemented as enrichment lookup" to "deferred (data-blocked)" — DOL EFAST returns 403 for structured queries; bulk CSV alternative lacks per-company lookup capability. Summary table: "Implemented and harvesting" count updated to 13 (was 9); new "Implemented as enrichment lookup" row added (3 lookups); new "Deferred (data-blocked)" row added (2 sources, distinct from code-not-written). Counting rule expanded to document enrichment-lookup state.
+
+- **v10** (2026-05-02): Housekeeping — distinguish implementation states. BEV sub-source bullet updated from "implemented; WAF-conditional" to "implemented (data-blocked)" to separate code-complete-but-blocked from live-and-harvesting sources. Summary table restructured: old flat "Implemented (v1)" row split into "Implemented and harvesting" (9) and "Implemented (data-blocked)" (1). Counting rule updated to define three states explicitly. No source status changes beyond the BEV label clarification.
 
 - **v9** (2026-05-02): Step 9 Batch 4 follow-up — BEV portfolio + BE Fellows static reference. `bev_portfolio`: status updated from deferred to implemented (`harvest/bev_portfolio.py`; Nuxt 3 SSR harvester extracting `window.__INITIAL_STATE__` via `json.JSONDecoder.raw_decode()` + recursive `system.type == "company"` walk; ~206 records; live access is WAF-conditional — Akamai CDN returns 200 when cache is warm, 403 otherwise). `breakthrough_energy_fellows_directory`: status updated from deferred to partially implemented — 2026 cohort static reference available as `enrich/be_fellows_lookup.py` (78 companies, 144 fellows; exact + fuzzy lookup; B4 signal injected into `score_company_founders()` in `enrich/founder_pedigree.py`); live web scraper remains deferred. Summary: implemented 23 → 25; deferred 25 → 23.
 
