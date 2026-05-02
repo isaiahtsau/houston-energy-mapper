@@ -2,7 +2,7 @@
 
 **Purpose:** Master catalog of harvest sources for the Houston Energy Mapper pipeline.
 **Drives:** `harvest/*.py` modules and `pipeline/orchestrator.py` source registry.
-**Version:** v5
+**Version:** v6
 **Last updated:** 2026-05-02
 
 ---
@@ -93,39 +93,53 @@ These are the highest-signal sources for Tier A and Tier B-high companies. Houst
 
 ---
 
-### `greentown_houston` — Greentown Houston tenant directory
+### `greentown_houston` — Greentown Houston member directory
 
 | Field | Value |
 |-------|-------|
 | Type | accelerator |
-| URL | https://greentownlabs.com/houston/ |
+| URL | https://greentownlabs.com/members/?hq=houston |
 | Houston tier reach | A |
 | Scrape method | static_html |
 | Scrape depth | listing_plus_detail |
 | Auth required | No |
 | Update cadence | monthly; rolling membership |
-| Expected yield | 80-120 (~80-120 active member companies) |
+| Expected yield | 200-280 (~245 Houston members confirmed at build time) |
 | v1 status | implemented (Step 9 — Batch 2) |
 
-**Notes.** Strongest physical-presence signal for Tier A. 4200 San Jacinto address. Some companies are HQ Houston, some are non-Houston-HQ with Houston pilot operations — distinguish via `is_houston_hq` field during enrichment.
+**URL correction.** Spec listed `greentownlabs.com/houston/` — that page is a marketing overview, not the directory. Member directory is at `/members/?hq=houston`. Pre-implementation inspection (2026-05-01) confirmed correct URL.
+
+**Access pattern.** The `/members/` page is JS-rendered (WordPress AJAX), but the underlying AJAX endpoint is a direct HTTP POST — no nonce, no auth, no Playwright needed. POST to `https://greentownlabs.com/wp-admin/admin-ajax.php` with `action=greentown_ajax_get_filter_members&hq=houston&page=N`. Response is a raw HTML fragment. Paginate until `.no-results` element appears (page 11 at build time). This is classified as `static_html` (direct HTTP, no JS execution).
+
+**Yield correction.** Spec estimated 80-120; actual Houston-filter yield is 245 (10 pages × 27/page except last). Total Greentown membership (unfiltered) is larger.
+
+**Notes.** Strongest physical-presence signal for Tier A. 4200 San Jacinto address. Some companies are HQ Houston, some are non-Houston-HQ with Houston pilot operations. Sector tag stored in `extra["sector"]`. Two-pass: AJAX listing → detail page per company (for website URL and full description). Strategic partnership with Energytech Cypher announced (they share the Greentown Houston facility).
 
 ---
 
-### `energytech_nexus` — EnergyTech Nexus (COPILOT, Pilotathon, LiftOff programs)
+### `energytech_nexus` — Energytech Cypher (formerly EnergyTech Nexus)
 
 | Field | Value |
 |-------|-------|
 | Type | accelerator |
-| URL | https://energytechnexus.com |
+| URL | https://energycapitalhtx.com (press-release articles) |
 | Houston tier reach | A, B |
 | Scrape method | static_html |
-| Scrape depth | listing_plus_detail |
+| Scrape depth | listing (no detail pages — descriptions inline in article) |
 | Auth required | No |
-| Update cadence | quarterly; 3 programs on varying schedules |
-| Expected yield | 15-25 (~15-25 companies across all programs) |
-| v1 status | implemented (Step 9 — Batch 2) |
+| Update cadence | annual (new cohort/Pilotathon articles per program cycle) |
+| Expected yield | 20-25 (14 COPILOT + 9 Pilotathon-only; deduped by name) |
+| v1 status | **implemented** — `harvest/energytech_nexus.py` |
 
-**Notes.** Founded 2023, Houston-anchored. Covers digital industrial, energy transition, decarbonization. Identified as a v1 gap by Research output Section 1.
+**Rebrand note.** EnergyTech Nexus officially rebranded as **Energytech Cypher (ETC)** in March 2026. All prior domains redirect to `energytechcypher.com`. The member directory (`energytechcypher.com/members`) is behind Memberstack auth and not publicly accessible — this harvester bypasses it entirely via static EnergyCapitalHTX press-release articles.
+
+**Implementation approach.** Two known article URLs are scraped directly (no auth, no JS rendering). Companies appear in `<article> <li>` elements. COPILOT article processed first (richer descriptions); Pilotathon article deduped by normalized name (with corporate-suffix and word-prefix matching). Nav links (ending `›`) are filtered. Location prefixes (`Phoenix-based`, `Birmingham, Alabama-based`) are extracted to `location_raw`.
+
+**Articles harvested:**
+- COPILOT 2025 cohort: `energycapitalhtx.com/energytech-nexus-copilot-cohort-2025` (14 companies)
+- Pilotathon 2025: `energycapitalhtx.com/energy-tech-nexus-2025-pilotathon` (9 additional after dedup)
+
+**Phase 2 work.** Monitor `energytechcypher.com/members` for public access. When new cohort/Pilotathon articles are published on EnergyCapitalHTX, add their URLs to `_ARTICLE_URLS` in `harvest/energytech_nexus.py`.
 
 ---
 
@@ -134,16 +148,22 @@ These are the highest-signal sources for Tier A and Tier B-high companies. Houst
 | Field | Value |
 |-------|-------|
 | Type | fellowship_directory |
-| URL | https://activate.org/houston |
+| URL | https://activate.org/activate-companies (Softr iframe; /houston is 404) |
 | Houston tier reach | A |
-| Scrape method | static_html |
+| Scrape method | headless_html |
 | Scrape depth | listing_plus_detail |
 | Auth required | No |
 | Update cadence | annual; Cohort 1 launched 2024 |
 | Expected yield | 8-12 (~8-12 fellows per cohort) |
-| v1 status | implemented (Step 9 — Batch 2) |
+| v1 status | deferred (Phase 2 — Softr iframe requires Playwright) |
 
-**Notes.** Activate fellows are HIGH founder pedigree signal (B4). Activate Houston launched 2024 — second-cohort companies may not appear until late 2025.
+**URL correction.** Spec listed `activate.org/houston` — that path returns 404. Correct URL is `activate.org/activate-companies` (or `activate.org/fellows` for the fellows view).
+
+**Deferral rationale.** The company/fellow directory at `activate.org/activate-companies` and `activate.org/fellows` is rendered inside a Softr iframe. The iframe `src` attribute is absent in the static HTML and injected dynamically by client-side JavaScript (GTM container). No static API endpoint accessible without JS execution. Houston location filtering is inside Softr's internal state — not a URL parameter. Pre-implementation inspection: 2026-05-01.
+
+**Scrape method correction.** Updated from `static_html` to `headless_html` to reflect actual requirement.
+
+**Phase 2 work:** Playwright harvester that: (1) loads `activate.org/activate-companies`, (2) waits for iframe src injection, (3) accesses the Softr iframe content, (4) filters for Houston-location fellows/companies. Alternatively, find the Softr app's backing data source (Airtable or Softr API) via network tab inspection — may expose a structured API endpoint.
 
 ---
 
@@ -638,12 +658,12 @@ These were considered during scoping and explicitly descoped. Documenting the *w
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| Implemented (v1) | 21 | 10 Tier 1 standalone + 2 Tier 2 standalone (goose_capital, ecv_portfolio) + 0 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups |
-| Deferred (Phase 2) | 25 | 7 standalone sources (incl. etv_portfolio) + 9 corporate VC sub-sources (all 4 top-priority now Phase 2) + 7 national climate VC remainder + 2 previously deferred standalone |
+| Implemented (v1) | 23 | 12 Tier 1 standalone (incl. greentown_houston, energytech_nexus) + 2 Tier 2 standalone + 0 corporate VC sub-sources + 3 national climate VC sub-sources + 3 Tier 3 standalone + 3 Tier 3 enrichment lookups |
+| Deferred (Phase 2) | 25 | 7 standalone sources (incl. etv_portfolio, activate_houston) + 9 corporate VC sub-sources + 7 national climate VC remainder + 2 previously deferred standalone |
 | Stretch (Phase 2+) | 1 | USPTO stealth discovery (Phase 2 — Step 13+; defer until dedup layer is mature) |
 | Considered + excluded | 4 categories | Social, paid databases, TMC, event rosters |
 
-**Total source universe considered:** 21 implemented + 25 deferred + 1 stretch = 47 active sources + 4 excluded categories = 51 distinct decisions documented.
+**Total source universe considered:** 23 implemented + 25 deferred + 1 stretch = 49 active sources + 4 excluded categories = 53 distinct decisions documented.
 
 ---
 
@@ -659,6 +679,8 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 ---
 
 ## Changelog
+
+- **v6** (2026-05-02): Step 9 Batch 2 source corrections. `greentown_houston`: URL corrected from `/houston/` (marketing page) to `/members/?hq=houston` (member directory); access pattern corrected — directory is AJAX-loaded but POST endpoint is public and requires no Playwright; yield revised from `80-120` to `200-280` (245 Houston members confirmed at build time). `energytech_nexus` reassigned to deferred (Phase 2): org rebranded as Energytech Cypher March 2026; `energytechcypher.com/members` returns 403; known COPILOT cohort companies documented. `activate_houston` reassigned to deferred (Phase 2): `activate.org/houston` is 404; directory at `activate.org/activate-companies` uses Softr iframe with dynamically injected src (needs Playwright); scrape_method corrected from `static_html` to `headless_html`.
 
 - **v5** (2026-05-02): Step 9 Batch 1 source corrections discovered during pre-implementation inspection. `goose_capital` domain confirmed as `www.goose.capital` (`goosecapital.com` does not resolve — DNS NXDOMAIN); scrape depth corrected from `listing_plus_detail` to `single_page` (single Webflow CMS page, no detail pages); yield revised to `20-35` (30 records confirmed at build time). `ecv_portfolio` yield revised to `10-15` (12 records confirmed: 9 Fund I, 3 Fund II). `etv_portfolio` status reassigned from `implemented (Step 9 — Batch 1)` to `deferred (Phase 2)` — `etv.energy` is DNS NXDOMAIN; re-verify in Phase 2. `corporate_vc_arms` status reassigned from `partially implemented (top 4 sub-sources)` to `deferred (Phase 2)` — all four target CVC URLs inaccessible (CTV: Cloudflare 403; SLB Ventures: `slbventures.com` is a Squarespace "coming soon" stub; ExxonMobil LCS: page removed, 302→404; BHEV: `bakerhughes.com/innovation/venturing` is 404). `config/corporate_vc_sources.yaml` scaffold entries also found to be dead (`shellventures.com` parked on GoDaddy, Equinor ventures 404, bp ventures 403). Framework architecture (Path B) is correct and requires no Python changes — only YAML population. Phase 2 work: Cloudflare-aware harvester pattern needed for CTV; current URL discovery needed for SLB Ventures, ExxonMobil LCS, BHEV.
 
@@ -689,3 +711,5 @@ The inventory is the catalog. The harvesters are the implementations. Two differ
 | v3 | 2026-04-30 | User | `rice_alliance` renamed to `rice_etvf`; `rice_alliance_racea` added as deferred. Pre-implementation inspection caught alliance.rice.edu aggregation pattern and RACEA URL change before code was written. |
 | v4 | 2026-05-02 | User | `innovationmap_rss` and `halliburton_labs` URL corrections; `halliburton_labs` SOURCE_TYPE corrected to `accelerator`; yield ranges updated from live run data; two robustness improvements from live run documented. |
 | v5 | 2026-05-02 | User | Step 9 Batch 1 source corrections: `goose_capital` domain corrected to `goose.capital`; `etv_portfolio` and all `corporate_vc_arms` sub-sources reassigned to Phase 2 (DNS/Cloudflare/parked/removed); implemented count revised to 21. |
+| v6 | 2026-05-02 | User | Step 9 Batch 2 source corrections: `greentown_houston` URL corrected, access pattern corrected (AJAX POST, no Playwright), yield revised to 200-280. `energytech_nexus` and `activate_houston` reassigned to Phase 2 (403 and Softr iframe respectively). |
+| v7 | 2026-05-02 | User | `energytech_nexus` promoted from deferred to implemented: press-release harvester against static EnergyCapitalHTX articles bypasses Memberstack-gated member directory. 23 unique records (14 COPILOT + 9 Pilotathon-only). URL updated to EnergyCapitalHTX. Implemented count revised to 23. |
