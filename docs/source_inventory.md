@@ -2,7 +2,7 @@
 
 **Purpose:** Master catalog of harvest sources for the Houston Energy Mapper pipeline.
 **Drives:** `harvest/*.py` modules and `pipeline/orchestrator.py` source registry.
-**Version:** v6
+**Version:** v8
 **Last updated:** 2026-05-02
 
 ---
@@ -377,15 +377,15 @@ These sources surface Tier B and Tier C candidates: companies operating outside 
 | Auth required | No |
 | Update cadence | quarterly |
 | Expected yield | 30-60 (~200-400 portfolio companies total; ~30-60 with Houston operational signal) |
-| v1 status | partially implemented (top 3 sub-sources in Step 9 — Batch 4; remainder deferred Step 11+) |
+| v1 status | partially implemented (Step 9 Batch 4: Lowercarbon + DCVC; BEV deferred Phase 2) |
 
-**Multi-source pattern (Path B).** Same pattern as `corporate_vc_arms`: the orchestrator instantiates `ClimateVcHarvester` once per YAML entry in `config/climate_vc_sources.yaml`.
+**Implementation note.** Individual harvester modules used instead of config-driven Path B pattern (Lowercarbon and DCVC have sufficiently different HTML structures to warrant separate parsers). BEV blocked by Akamai WAF — see `breakthrough_energy_fellows_directory` deferral note for same blocker details.
 
 **Sub-sources (priority by Houston-deal-flow density):**
 
-1. **Lowercarbon Capital** *(v1 implemented)*
-2. **Breakthrough Energy Ventures** *(v1 implemented)*
-3. **DCVC** *(v1 implemented)*
+1. **Lowercarbon Capital** *(implemented: harvest/lowercarbon.py — 103 records)*
+2. **Breakthrough Energy Ventures** *(deferred Phase 2 — Akamai WAF 403)*
+3. **DCVC** *(implemented: harvest/dcvc.py — 289 records)*
 4. Energy Impact Partners (EIP) *(deferred Step 11+)*
 5. Prelude Ventures *(deferred Step 11+)*
 6. Khosla Ventures (energy track) *(deferred Step 11+)*
@@ -410,9 +410,11 @@ These sources surface Tier B and Tier C candidates: companies operating outside 
 | Auth required | No |
 | Update cadence | annual |
 | Expected yield | 40-60 (~250-300 fellows cumulative; ~40-60 with relevant focus) |
-| v1 status | implemented (Step 9 — Batch 4) |
+| v1 status | deferred (Phase 2 — same Softr-iframe blocker as activate_houston) |
 
-**Notes.** National Activate Fellows (Berkeley, Boston, NYC, Houston) — strong B4 founder pedigree signal. Houston cohort is a Tier A subset; remainder is Tier C recruiting universe.
+**Deferral rationale (confirmed Step 9 Batch 4, 2026-05-02).** Both `activate.org/fellows` and `activate.org/activate-companies` embed Softr iframes (`nathanael7947.softr.app` and `activate-companies.softr.app`). Both Softr apps are JS-rendered (React/Vite) — no content in initial HTML. Airtable base `app5iw89U8jzOf1tF` (tables: `Companies`, `Fellows`) is the backing store.
+
+**Phase 2 work:** Option A — Playwright harvester that loads and interacts with the Softr iframe's "See more…" load-more button until all records are rendered, then scrapes `.collectionItem` elements. Option B — probe Airtable REST API directly with the known base ID (`app5iw89U8jzOf1tF`); if the base is publicly readable, a simple API call returns all records without Playwright.
 
 ---
 
@@ -446,9 +448,11 @@ These sources surface Tier B and Tier C candidates: companies operating outside 
 | Auth required | No |
 | Update cadence | annual |
 | Expected yield | 150-180 (~150-180 fellows across ~5 cohorts) |
-| v1 status | implemented (Step 9 — Batch 4) |
+| v1 status | deferred (Phase 2 — Akamai WAF 403 on all paths) |
 
-**Notes.** ~5 cohorts to date, $2B+ follow-on capital cumulative per Research output. Strong B4 founder pedigree signal. Houston-related fellows surface Tier B-C.
+**Deferral rationale (confirmed Step 9 Batch 4, 2026-05-02).** breakthroughenergy.org returns Akamai EdgeSuite WAF 403 "Access Denied" on every path attempted (`/fellows`, `/our-work/fellows`, `/our-work/breakthrough-energy-ventures`, `/portfolio`). SSL certificate chain also fails verification in automated HTTP clients. No publicly accessible directory structure confirmed.
+
+**Phase 2 work:** Browser automation with realistic TLS fingerprint (e.g., curl-impersonate or Playwright with full browser profile). Alternatively, source BEF portfolio data from Crunchbase/PitchBook API using "Breakthrough Energy" as investor filter.
 
 ---
 
