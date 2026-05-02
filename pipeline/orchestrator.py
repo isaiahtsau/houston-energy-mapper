@@ -478,10 +478,40 @@ def run_score(console: "Console | None" = None) -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_dedupe(console: "Console | None" = None) -> None:
-    """Run the deduplication pass. Stub — Step 10."""
+    """Run the cross-source deduplication pass (Step 10)."""
+    from signals.dedup import run_dedup
+
+    from storage.db import get_connection
+    conn = get_connection("pipeline.db")
     if console:
-        console.print("[bold blue]Dedupe:[/bold blue] (not yet implemented — Step 10)")
-    logger.info("[orchestrator:dedupe] Stub — not yet implemented")
+        console.print("[bold blue]Dedupe:[/bold blue] running cross-source dedup …")
+
+    result = run_dedup(conn)
+
+    if console:
+        console.print(
+            f"[bold blue]Dedupe:[/bold blue] "
+            f"{result.total_before} → {result.total_after} canonical companies "
+            f"({result.merges} merge groups, {result.duplicates_removed} duplicates removed, "
+            f"domain={result.domain_matches} fuzzy={result.fuzzy_matches})"
+        )
+        if result.merge_cases:
+            console.print(f"[dim]Sample merges (up to 5):[/dim]")
+            for mc in result.merge_cases[:5]:
+                console.print(
+                    f"  [cyan]{mc.canonical_name}[/cyan] ← "
+                    + ", ".join(mc.duplicate_names)
+                    + f"  [{mc.match_type}]"
+                )
+
+    logger.info(
+        "[orchestrator:dedupe] %d → %d companies (%d merges, domain=%d fuzzy=%d)",
+        result.total_before,
+        result.total_after,
+        result.merges,
+        result.domain_matches,
+        result.fuzzy_matches,
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────

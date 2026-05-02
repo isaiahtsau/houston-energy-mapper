@@ -66,6 +66,9 @@ _HEADERS = {
 _SKIP_LINK_HOSTS: frozenset[str] = frozenset({
     "iondistrict.com",
     "www.iondistrict.com",
+    # Rice / Nexus portal pages — shared URLs, not company-specific sites
+    "nexus.rice.edu",
+    # Social media — not company websites
     "linkedin.com",
     "www.linkedin.com",
     "twitter.com",

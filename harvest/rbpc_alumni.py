@@ -49,6 +49,22 @@ logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://rbpc.rice.edu"
 
+# Hosts that are portfolio pages or social media — not company websites.
+# If the RBPC table links to one of these, treat website as None.
+_SKIP_LINK_HOSTS: frozenset[str] = frozenset({
+    "rbpc.rice.edu",
+    "rice.edu",
+    "nexus.rice.edu",
+    "linkedin.com",
+    "www.linkedin.com",
+    "twitter.com",
+    "x.com",
+    "facebook.com",
+    "instagram.com",
+    "www.instagram.com",
+    "youtube.com",
+})
+
 _HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -238,7 +254,10 @@ class RbpcAlumniHarvester(BaseHarvester):
                 if link and link.get("href"):
                     href = link["href"].strip()
                     if href.startswith("http"):
-                        website = href
+                        from urllib.parse import urlparse
+                        host = re.sub(r"^www\.", "", urlparse(href).hostname or "")
+                        if host and host not in _SKIP_LINK_HOSTS:
+                            website = href
 
             records.append(
                 RawCompanyRecord(
