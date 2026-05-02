@@ -22,6 +22,7 @@ Tier threshold calibration note:
 """
 from __future__ import annotations
 
+import logging
 import re
 from typing import Literal
 
@@ -33,6 +34,13 @@ from models import (
     resolves_to_major,
     CompanyRecord,
 )
+
+logger = logging.getLogger(__name__)
+
+try:
+    from llm.client import call_llm
+except Exception:  # pragma: no cover
+    call_llm = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
 # Output types
@@ -800,6 +808,86 @@ def _build_reasoning(
 
 
 # ---------------------------------------------------------------------------
+# LLM augmentation layer
+# ---------------------------------------------------------------------------
+
+
+class _LLMPedigreeAugmentation(BaseModel):
+    """Structured output of the LLM founder pedigree augmentation pass.
+
+    The LLM reports only NEW B1/B3/B6 matches — ones the deterministic
+    regex missed because they were phrased indirectly.
+    """
+    additional_matches: list[CategoryMatch]
+
+
+def _llm_augment(
+    bio_text: str,
+    already_detected: set[str],
+) -> list[CategoryMatch]:
+    """Call LLM to detect paraphrased B1/B3/B6 signals the regex missed.
+
+    Only B1 (major company experience), B3 (prior exit), and B6 (high-signal
+    pedigree) are candidates for paraphrase detection. B2, B4, B5 are
+    name-and-keyword based and are fully handled by the deterministic pass.
+
+    Args:
+        bio_text:         Founder bio or company description text.
+        already_detected: Set of category strings already found by the
+                          deterministic pass (e.g. {"B2", "B5"}).
+
+    Returns:
+        List of CategoryMatch entries for NEW signals only. Empty list on
+        LLM failure, thin description, or no new signals found.
+    """
+    if call_llm is None:  # pragma: no cover
+        return []
+
+    # Skip LLM call if description is too thin to contain paraphrased signals
+    if len(bio_text.strip()) < 20:
+        return []
+
+    try:
+        resp = call_llm(
+            prompt_name="founder_pedigree",
+            prompt_version="v1",
+            variables={
+                "bio_text": bio_text,
+                "already_detected": list(already_detected) if already_detected else ["(none)"],
+            },
+            response_schema=_LLMPedigreeAugmentation,
+            model="claude-haiku-4-5",
+            max_tokens=400,
+            temperature=0.0,
+        )
+    except Exception as exc:
+        logger.warning(f"[founder_pedigree:llm-augment-error] {exc}")
+        return []
+
+    if resp.parsed is None:
+        return []
+
+    # Validate and cap raw_points on each match returned by the LLM
+    validated: list[CategoryMatch] = []
+    for match in resp.parsed.additional_matches:
+        if match.category not in ("B1", "B3", "B6"):
+            logger.debug(
+                f"[founder_pedigree:llm-augment] Ignoring unexpected category "
+                f"'{match.category}' from LLM (only B1/B3/B6 expected)"
+            )
+            continue
+        match.raw_points = min(match.raw_points, _MAX_CATEGORY_POINTS)
+        validated.append(match)
+
+    if validated:
+        logger.debug(
+            f"[founder_pedigree:llm-augment] Found {len(validated)} new match(es): "
+            + ", ".join(f"{m.category}/{m.pattern_id}" for m in validated)
+        )
+    return validated
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -848,9 +936,11 @@ def score_founder_pedigree(
     if b6:
         det_matches.append(b6)
 
-    # LLM augmentation stub
-    # TODO: call LLM for paraphrased B1/B3/B6 after prompts/founder_pedigree_v1.md — Step 8
-    all_matches = det_matches
+    # LLM augmentation — detect paraphrased B1/B3/B6 the deterministic pass missed
+    already_detected = {m.category for m in det_matches}
+    llm_matches = _llm_augment(bio_text, already_detected)
+    # Only add LLM matches for categories not already covered by the deterministic pass
+    all_matches = det_matches + [m for m in llm_matches if m.category not in already_detected]
 
     # Multipliers
     multipliers = detect_houston_multipliers(

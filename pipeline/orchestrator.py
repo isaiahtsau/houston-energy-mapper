@@ -397,10 +397,47 @@ def run_enrich(
     dry_run: bool = False,
     console: "Console | None" = None,
 ) -> None:
-    """Run the enricher on classified companies. Stub — Step 8."""
+    """Run the enricher on classified companies (Step 8).
+
+    Three LLM passes per company (Haiku model):
+      1. Sub-sector classification → primary_sector + sub_sector
+      2. Summary generation        → summary (2–3 sentences)
+      3. Founder pedigree scoring  → founder_pedigree_score/tier/confidence/full
+
+    Idempotent: skips companies where all three columns are already populated.
+    """
+    from rich.progress import track
+    from signals.enrichment import enrich_company, get_enrich_targets
+    from storage.db import get_connection, init_db
+
+    conn = get_connection("pipeline.db")
+    init_db(conn)   # ensures new Step-8 columns exist via _migrate_schema
+
+    targets = get_enrich_targets(conn)
+
     if console:
-        console.print("[bold blue]Enrich:[/bold blue] (not yet implemented — Step 8)")
-    logger.info("[orchestrator:enrich] Stub — not yet implemented")
+        console.print(
+            f"[bold blue]Enrich:[/bold blue] {len(targets)} companies need enrichment"
+        )
+    logger.info(f"[orchestrator:enrich] {len(targets)} targets")
+
+    if dry_run or not targets:
+        return
+
+    failed = 0
+    for company_id, name in track(targets, description="Enriching…"):
+        try:
+            enrich_company(company_id, name, conn)
+        except Exception as exc:
+            logger.error(f"[orchestrator:enrich-error] {company_id!r}: {exc}")
+            failed += 1
+
+    logger.info(
+        f"[orchestrator:enrich] done — "
+        f"{len(targets) - failed} enriched, {failed} failed"
+    )
+    if console and failed:
+        console.print(f"[yellow]Enrich: {failed} companies failed — see logs[/yellow]")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -32,7 +32,7 @@ from config.settings import settings
 
 # Schema version — increment this when columns are added, then add the
 # ALTER TABLE ADD COLUMN IF NOT EXISTS statement to _migrate_schema().
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -85,11 +85,16 @@ CREATE TABLE IF NOT EXISTS companies (
     is_excluded             INTEGER DEFAULT 0,  -- 1 if hard-excluded by classifier rules
     exclude_reason          TEXT,               -- e.g. "services firm — no technology IP"
 
-    -- Enrichment
-    founder_names           TEXT,               -- JSON array of strings
-    founder_pedigree        TEXT,               -- JSON object: {name: {tier, detail}}
-    sub_sector              TEXT,               -- e.g. "Carbon Capture & Storage"
-    summary                 TEXT,               -- one-sentence human-readable summary
+    -- Enrichment (Step 8)
+    founder_names           TEXT,               -- JSON array of strings (legacy; Step 8 skips name extraction)
+    founder_pedigree        TEXT,               -- JSON object: {name: {tier, detail}} (legacy)
+    founder_pedigree_score  REAL,               -- final_score from FounderPedigree scoring
+    founder_pedigree_tier   TEXT,               -- HIGH | MEDIUM-HIGH | MEDIUM | LOW-MEDIUM | LOW
+    founder_pedigree_confidence TEXT,           -- HIGH | MEDIUM | LOW
+    founder_pedigree_full   TEXT,               -- JSON: complete FounderPedigree object for audit
+    primary_sector          TEXT,               -- traditional_energy | energy_transition | industrial_tech | off_thesis
+    sub_sector              TEXT,               -- e.g. "geothermal", "carbon_capture_utilization_storage"
+    summary                 TEXT,               -- 2-3 sentence analyst-grade summary
 
     -- Houston presence score
     houston_tier            TEXT,               -- A | A-low | B-high | B | B-low | C
@@ -196,10 +201,19 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
 
     SQLite supports IF NOT EXISTS in ALTER TABLE since version 3.37.0 (2021-11-27).
     """
-    # Example (uncomment when adding a new column in schema version 2):
-    # conn.execute(
-    #     "ALTER TABLE companies ADD COLUMN IF NOT EXISTS crunchbase_url TEXT"
-    # )
+    # Schema version 2 — Step 8 enrichment columns
+    # IF NOT EXISTS in ALTER TABLE is unsupported on some SQLite builds; use PRAGMA guard.
+    existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(companies)")}
+    for col_def in [
+        "founder_pedigree_score  REAL",
+        "founder_pedigree_tier   TEXT",
+        "founder_pedigree_confidence TEXT",
+        "founder_pedigree_full   TEXT",
+        "primary_sector          TEXT",
+    ]:
+        col_name = col_def.split()[0]
+        if col_name not in existing_cols:
+            conn.execute(f"ALTER TABLE companies ADD COLUMN {col_def}")
     conn.commit()
 
 
