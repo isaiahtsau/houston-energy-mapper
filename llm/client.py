@@ -247,8 +247,19 @@ def _parse_structured_response(
     Returns:
         Populated Pydantic model instance, or None on any parse/validation error.
     """
+    # Strip markdown code fences if model wrapped the JSON despite instructions.
+    stripped = content.strip()
+    if stripped.startswith("```"):
+        # Remove opening fence (```json or ```) and closing ```
+        stripped = stripped.split("\n", 1)[-1]  # drop first line (``` or ```json)
+        if stripped.endswith("```"):
+            stripped = stripped[: stripped.rfind("```")]
+        stripped = stripped.strip()
+    else:
+        stripped = content
+
     try:
-        data = json.loads(content)
+        data = json.loads(stripped)
         return schema.model_validate(data)
     except json.JSONDecodeError as exc:
         logger.warning(

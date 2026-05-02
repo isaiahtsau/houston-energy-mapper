@@ -5,7 +5,6 @@ Two-pass system per company:
   1. apply_hard_exclude_rules — deterministic Python checks; no LLM call.
      If a rule matches, the company is excluded with a structured reason.
   2. classify_venture_scale — LLM classifier via prompts/classifier_v1.md.
-     Stubbed until Step 6; raises NotImplementedError.
 
 CompanyRecord and shared constants are imported from models.py.
 """
@@ -15,9 +14,17 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from models import CORPORATE_VC_WHITELIST, HOUSTON_MAJORS, CompanyRecord
+
+# Module-level import so tests can patch signals.venture_scale.call_llm.
+# Deferred via try/except so that importing this module during unit tests
+# without a real API key does not fail at import time.
+try:
+    from llm.client import call_llm
+except Exception:  # pragma: no cover
+    call_llm = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
 # Output types
@@ -43,7 +50,17 @@ class VentureScaleClassification(BaseModel):
     positive_signals: list[str]    # signal IDs from the rubric
     false_positive_patterns: list[str]  # pattern IDs from the rubric
     reasoning: str                 # 2–4 sentences referencing specific evidence
-    review_queue: bool             # True if BORDERLINE or LOW confidence
+    review_queue: bool = False     # True if BORDERLINE or LOW confidence
+
+    @model_validator(mode="before")
+    @classmethod
+    def _infer_review_queue(cls, data: dict) -> dict:
+        """Compute review_queue from tier/confidence when the model omits it."""
+        if isinstance(data, dict) and "review_queue" not in data:
+            tier = data.get("tier", "")
+            confidence = data.get("confidence", "")
+            data["review_queue"] = tier == "BORDERLINE" or confidence == "LOW"
+        return data
 
 
 # ---------------------------------------------------------------------------
@@ -267,23 +284,101 @@ def apply_hard_exclude_rules(company: CompanyRecord) -> HardExcludeResult:
     return HardExcludeResult(excluded=False)
 
 
+# ---------------------------------------------------------------------------
+# Session-level cost accumulator (thread-unsafe but pipeline is sequential)
+# ---------------------------------------------------------------------------
+
+_session_classify_cost_usd: float = 0.0
+
+
+def get_classify_cost() -> float:
+    """Return cumulative USD cost of classify_venture_scale calls this session."""
+    return _session_classify_cost_usd
+
+
+def reset_classify_cost() -> None:
+    """Reset cost accumulator. Used in tests."""
+    global _session_classify_cost_usd
+    _session_classify_cost_usd = 0.0
+
+
+# ---------------------------------------------------------------------------
+# LLM classifier
+# ---------------------------------------------------------------------------
+
+
 def classify_venture_scale(
     company: CompanyRecord,
     examples_bank: list[dict] | None = None,
+    *,
+    affiliation: str | None = None,
+    etvf_years: str | None = None,
+    listing_only: bool = False,
+    source_data_quality_flag: str | None = None,
 ) -> VentureScaleClassification:
-    """LLM-judged venture-scale classification via the classifier prompt.
+    """LLM-judged venture-scale classification via prompts/classifier_v1.md.
 
-    Not yet implemented — requires prompts/classifier_v1.md, which is drafted
-    in Step 6 after the first harvester run produces real records to calibrate against.
+    Calls Claude Sonnet 4.6 with the company record formatted as a structured
+    prompt. Returns a VentureScaleClassification matching the Pydantic model.
+    On LLM parse failure, returns a fallback BORDERLINE/LOW record routed to
+    the review queue rather than crashing the pipeline.
 
     Args:
-        company:       CompanyRecord that passed apply_hard_exclude_rules.
-        examples_bank: Few-shot examples from data/validated_examples.jsonl.
-                       Auto-injected by the pipeline orchestrator.
+        company:                CompanyRecord that passed apply_hard_exclude_rules.
+        examples_bank:          Few-shot examples from data/validated_examples.jsonl.
+                                Auto-injected by the pipeline orchestrator.
+        affiliation:            ETVF-specific affiliation tag ("Presenting Company",
+                                "Office Hours Company", or None). Passed as prompt variable.
+        etvf_years:             Stringified list of ETVF years, e.g. "[2024, 2025]".
+        listing_only:           True when no profile page exists (2022-2023 records).
+        source_data_quality_flag: "description_company_name_mismatch_possible" or None.
 
-    Raises:
-        NotImplementedError: Always — implemented in Step 6.
+    Returns:
+        VentureScaleClassification — score, tier, confidence, signals, reasoning,
+        review_queue flag.
     """
-    raise NotImplementedError(
-        "classify_venture_scale — implemented in Step 6 after prompts/classifier_v1.md is drafted"
+    global _session_classify_cost_usd
+
+    variables = {
+        "company_id": company.company_id,
+        "name": company.name,
+        "description": company.description or "",
+        "website": company.canonical_domain or company.name,  # fallback to name if no domain
+        "affiliation": affiliation or "None",
+        "etvf_years": etvf_years or "[]",
+        "listing_only": "true" if listing_only else "false",
+        "source_data_quality_flag": source_data_quality_flag or "none",
+    }
+
+    response = call_llm(
+        prompt_name="classifier",
+        prompt_version="v1.1",
+        variables=variables,
+        response_schema=VentureScaleClassification,
+        few_shot_examples=examples_bank,
+        auto_inject_examples=examples_bank is None,
+        temperature=0.0,
+        max_tokens=1024,
+    )
+
+    _session_classify_cost_usd += response.cost_usd
+
+    if response.parsed is not None:
+        return response.parsed
+
+    # Parse failure: fallback to BORDERLINE/LOW rather than crashing the pipeline.
+    # The failed raw content is already logged as a warning by call_llm.
+    return VentureScaleClassification(
+        company_id=company.company_id,
+        score=5.0,
+        tier="BORDERLINE",
+        confidence="LOW",
+        positive_signals=[],
+        false_positive_patterns=[],
+        reasoning=(
+            "(1) No positive signals observed — LLM response parse failure. "
+            "(2) No false-positive patterns observed. "
+            "(3) Routed to manual review due to parse failure; re-run after prompt inspection."
+        ),
+        review_queue=True,
     )

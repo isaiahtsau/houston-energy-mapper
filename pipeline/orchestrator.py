@@ -180,11 +180,209 @@ def run_classify(
 ) -> None:
     """Run the venture-scale classifier on unclassified raw records.
 
-    Stub — full implementation in Step 6.
+    Two passes per company:
+      1. apply_hard_exclude_rules — deterministic; no LLM call.
+      2. classify_venture_scale — LLM call via prompts/classifier_v1.md.
+
+    Deduplicates raw records by normalized name slug before classifying
+    (provisional; real cross-source dedup is Step 10). Idempotent: skips
+    companies already present in the companies table with a classification.
     """
+    import json
+    import re
+
+    from storage.db import init_db, to_json_column
+    from signals.venture_scale import (
+        apply_hard_exclude_rules,
+        classify_venture_scale,
+        get_classify_cost,
+        reset_classify_cost,
+    )
+    from models import CompanyRecord
+
+    conn = init_db()
+    run_id = _get_run_id()
+    reset_classify_cost()
+
+    rows = conn.execute(
+        "SELECT * FROM raw_records ORDER BY id"
+    ).fetchall()
+
+    # Deduplicate by name slug — one company per normalized name for this pass.
+    # Cross-source dedup (Step 10) will merge same-company rows from different sources.
+    seen_slugs: dict[str, dict] = {}
+    for row in rows:
+        slug = re.sub(r"[^a-z0-9]+", "-", row["name_raw"].lower()).strip("-")
+        if slug not in seen_slugs:
+            seen_slugs[slug] = dict(row)
+
+    unique_companies = list(seen_slugs.items())  # [(slug, row_dict), ...]
+    total = len(unique_companies)
+
     if console:
-        console.print("[bold blue]Classify:[/bold blue] (not yet implemented — Step 6)")
-    logger.info("[orchestrator:classify] Stub — not yet implemented")
+        mode = "[yellow]DRY RUN[/yellow]" if dry_run else "[green]LIVE[/green]"
+        console.print(
+            f"[bold blue]Classify:[/bold blue] {total} unique companies to classify {mode}"
+        )
+
+    if dry_run:
+        from llm.client import estimate_cost
+        # Estimate cost for one record, multiply out
+        sample_row = unique_companies[0][1] if unique_companies else None
+        if sample_row:
+            extra = json.loads(sample_row.get("extra") or "{}")
+            est = estimate_cost(
+                prompt_name="classifier",
+                prompt_version="v1",
+                variables={
+                    "company_id": "sample",
+                    "name": sample_row["name_raw"],
+                    "description": sample_row.get("description") or "",
+                    "website": sample_row.get("website") or "",
+                    "affiliation": extra.get("affiliation_raw") or "None",
+                    "etvf_years": str(extra.get("etvf_years", [])),
+                    "listing_only": "false",
+                    "source_data_quality_flag": "none",
+                },
+                auto_inject_examples=False,
+            )
+            total_est = est["cost_usd_est"] * total
+            if console:
+                console.print(
+                    f"  Estimated cost: ~${total_est:.2f} "
+                    f"({total} × ~${est['cost_usd_est']:.4f}/record)"
+                )
+        return
+
+    n_excluded = 0
+    n_classified = 0
+    n_skipped = 0
+    n_errors = 0
+
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    for company_id, row in unique_companies:
+        # Idempotency: skip if already classified or excluded
+        existing = conn.execute(
+            "SELECT venture_scale_score, is_excluded FROM companies WHERE id = ?",
+            (company_id,),
+        ).fetchone()
+        if existing and (
+            existing["venture_scale_score"] is not None or existing["is_excluded"]
+        ):
+            n_skipped += 1
+            continue
+
+        extra = json.loads(row.get("extra") or "{}")
+        affiliation: str | None = extra.get("affiliation_raw")
+        etvf_years_str = str(extra.get("etvf_years", []))
+        listing_only: bool = bool(extra.get("listing_only", False))
+        quality_flag: str | None = extra.get("source_data_quality_flag")
+
+        # Build minimal CompanyRecord from harvested data
+        company = CompanyRecord(
+            company_id=company_id,
+            name=row["name_raw"],
+            description=row.get("description") or "",
+            canonical_domain=row.get("website"),
+        )
+
+        # Ensure company row exists
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO companies
+                (id, name, name_normalized, source_ids, first_seen_at, last_updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                company_id,
+                row["name_raw"],
+                row["name_raw"].lower().strip(),
+                to_json_column([row["source"]]),
+                now_iso,
+                now_iso,
+            ),
+        )
+
+        # Pass 1 — deterministic hard-exclude
+        he = apply_hard_exclude_rules(company)
+        if he.excluded:
+            conn.execute(
+                """
+                UPDATE companies
+                   SET is_excluded=1, exclude_reason=?, last_updated_at=?
+                 WHERE id=?
+                """,
+                (he.reason, now_iso, company_id),
+            )
+            conn.commit()
+            n_excluded += 1
+            logger.info(
+                f"[classify:excluded] {row['name_raw']} — {he.rule_id}: {he.reason[:80]}"
+            )
+            continue
+
+        # Pass 2 — LLM classification
+        try:
+            result = classify_venture_scale(
+                company,
+                affiliation=affiliation,
+                etvf_years=etvf_years_str,
+                listing_only=listing_only,
+                source_data_quality_flag=quality_flag,
+            )
+        except Exception as exc:
+            logger.error(
+                f"[classify:error] {row['name_raw']}: {exc}",
+                exc_info=True,
+            )
+            n_errors += 1
+            conn.commit()
+            continue
+
+        conn.execute(
+            """
+            UPDATE companies
+               SET venture_scale_score=?,
+                   venture_scale_confidence=?,
+                   venture_scale_reasoning=?,
+                   venture_scale_prompt_version=?,
+                   in_review_queue=?,
+                   last_updated_at=?
+             WHERE id=?
+            """,
+            (
+                result.score,
+                result.confidence,
+                result.reasoning,
+                "v1",
+                1 if result.review_queue else 0,
+                now_iso,
+                company_id,
+            ),
+        )
+        conn.commit()
+        n_classified += 1
+
+        logger.debug(
+            f"[classify:ok] {row['name_raw']} → {result.tier} "
+            f"score={result.score:.1f} conf={result.confidence}"
+        )
+
+    total_cost = get_classify_cost()
+
+    if console:
+        console.print(
+            f"  Classified: {n_classified} | Excluded: {n_excluded} | "
+            f"Skipped (already done): {n_skipped} | Errors: {n_errors}"
+        )
+        console.print(f"  Total LLM cost: ${total_cost:.4f}")
+
+    logger.info(
+        f"[orchestrator:classify] done — classified={n_classified} "
+        f"excluded={n_excluded} skipped={n_skipped} errors={n_errors} "
+        f"cost=${total_cost:.4f}"
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
