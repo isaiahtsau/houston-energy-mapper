@@ -17,7 +17,7 @@ Commands:
 Examples:
   python cli.py run --all
   python cli.py run --all --dry-run
-  python cli.py harvest --sources rice_alliance,halliburton_labs
+  python cli.py harvest --sources rice_etvf,halliburton_labs
   python cli.py run --all --max-llm-calls 50
   python cli.py export
 
@@ -47,7 +47,7 @@ def harvest(
     sources: Optional[str] = typer.Option(
         None,
         "--sources", "-s",
-        help="Comma-separated source names to run (e.g. rice_alliance,halliburton_labs). "
+        help="Comma-separated source names to run (e.g. rice_etvf,halliburton_labs). "
              "Omit to run all configured sources.",
     ),
     dry_run: bool = typer.Option(

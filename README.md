@@ -14,6 +14,18 @@ It is designed to be **re-run** — each run is idempotent, the flywheel compoun
 
 ---
 
+## Final state (May 4, 2026)
+
+- 13 active source harvesters
+- 2,166 raw records harvested
+- 113 VENTURE_SCALE / 227 BORDERLINE / 404 NOT_VENTURE_SCALE classified
+- 149 records with founder pedigree extracted from company websites
+- 514 records flagged for Phase 2 enrichment queue
+- Flywheel: 11 validated examples encoded
+- Primary deliverable: `data/exports/houston_energy_mapper_v1.xlsx`
+
+---
+
 ## Architecture
 
 ```
@@ -86,7 +98,7 @@ cp .env.example .env
 python cli.py run --all --dry-run
 
 # 5. Run a single harvester
-python cli.py harvest --sources rice_alliance
+python cli.py harvest --sources rice_etvf
 
 # 6. Run the full pipeline
 python cli.py run --all
@@ -107,12 +119,11 @@ Every run is idempotent. Companies are identified by a canonical slug derived fr
 
 ```
 data/exports/
-├── houston_energy_ventures.xlsx   # primary deliverable
-├── houston_energy_ventures.csv    # diff-friendly mirror
+├── houston_energy_mapper_v1.xlsx  # primary deliverable
 └── run_log_YYYYMMDD.md            # per-source success/failure, token counts, cost
 ```
 
-Each row in the spreadsheet includes: company name, website, sub-sector, Houston tier, presence point total, signal trace, venture-scale score, confidence flag, reasoning trace, founder names, pedigree tier, and source(s).
+Each row in the spreadsheet includes: company name, website, primary sector, sub-sector, venture scale tier, score, confidence, summary, source(s), Houston tier, in-review queue flag, founder pedigree, classification reasoning, and human override.
 
 ---
 

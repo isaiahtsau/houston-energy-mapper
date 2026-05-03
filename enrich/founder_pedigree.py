@@ -905,8 +905,6 @@ def score_founder_pedigree(
 ) -> FounderPedigree:
     """Score a single founder. Deterministic-only path implemented here.
 
-    LLM augmentation (B1/B3/B6 paraphrased patterns):
-        TODO — implemented in Step 8 after prompts/founder_pedigree_v1.md is drafted.
     """
     # Deterministic detection
     det_matches: list[CategoryMatch] = []
