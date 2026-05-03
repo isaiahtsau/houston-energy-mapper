@@ -339,6 +339,23 @@ def classify_venture_scale(
     """
     global _session_classify_cost_usd
 
+    # Auto-load relevance-filtered examples when no explicit bank is provided.
+    # Uses flywheel.validated_examples.load_for_classify() which filters by
+    # same source, score range, and sub_sector for maximum in-context relevance.
+    # Falls back to [] silently if validated_examples.jsonl doesn't exist yet.
+    resolved_examples: list[dict] | None = examples_bank
+    if resolved_examples is None:
+        try:
+            from flywheel.validated_examples import load_for_classify
+            company_ctx = {
+                "source": getattr(company, "source", None),
+                "sub_sector": getattr(company, "sub_sector", None),
+            }
+            loaded = load_for_classify(company_ctx, max_n=6)
+            resolved_examples = loaded or None  # keep None if empty (no-op injection)
+        except Exception:
+            resolved_examples = None
+
     variables = {
         "company_id": company.company_id,
         "name": company.name,
@@ -355,8 +372,8 @@ def classify_venture_scale(
         prompt_version="v1.1",
         variables=variables,
         response_schema=VentureScaleClassification,
-        few_shot_examples=examples_bank,
-        auto_inject_examples=examples_bank is None,
+        few_shot_examples=resolved_examples,
+        auto_inject_examples=resolved_examples is None,
         temperature=0.0,
         max_tokens=1024,
     )
