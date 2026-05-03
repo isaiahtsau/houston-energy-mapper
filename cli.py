@@ -159,6 +159,63 @@ def run(
     run_pipeline(sources=source_list, dry_run=dry_run, console=console)
 
 
+@app.command(name="coalesce-domains")
+def coalesce_domains(
+    dry_run: bool = typer.Option(
+        False, "--dry-run",
+        help="Compute resolutions and report without writing to DB.",
+    ),
+    all_records: bool = typer.Option(
+        False, "--all",
+        help="Run against all companies, not just VS+BORDERLINE (score >= 4.0).",
+    ),
+) -> None:
+    """Propagate raw_records.website → companies.canonical_domain via name join.
+
+    Fixes the gap where dedup never populated canonical_domain from harvested
+    website fields. Idempotent — only updates NULL/empty canonical_domain values.
+    """
+    import sqlite3
+    from config.settings import settings
+    from enrich.canonical_domain_coalesce import coalesce_domains as _coalesce
+
+    conn = sqlite3.connect(str(settings.db_dir / "pipeline.db"))
+    conn.row_factory = sqlite3.Row
+
+    scope_vs_bl = not all_records
+    console.print(
+        f"[bold]Coalescing canonical domains[/bold] "
+        f"(scope={'VS+BL only' if scope_vs_bl else 'all'}, dry_run={dry_run})"
+    )
+
+    summary = _coalesce(conn, dry_run=dry_run, scope_vs_bl_only=scope_vs_bl)
+
+    from rich.table import Table
+
+    console.print(f"\n[bold]Results:[/bold]")
+    console.print(f"  Missing before: {summary.total_missing_before}")
+    console.print(f"  Resolved:       [green]{summary.resolved}[/green]")
+    console.print(f"  Still NULL:     [yellow]{summary.still_null}[/yellow]")
+    if dry_run:
+        console.print("  [dim](dry run — no changes written)[/dim]")
+
+    if summary.by_source:
+        t = Table(title="Resolutions by Source", show_lines=False)
+        t.add_column("Source", style="cyan")
+        t.add_column("Resolved", justify="right")
+        for src, count in sorted(summary.by_source.items(), key=lambda x: -x[1]):
+            t.add_row(src, str(count))
+        console.print(t)
+
+    if summary.samples:
+        console.print(f"\n[bold]Sample resolutions ({min(10, len(summary.samples))}):[/bold]")
+        for s in summary.samples[:10]:
+            console.print(
+                f"  [green]{s['company']}[/green] → {s['url']}  "
+                f"[dim](via {s['source']}, {s['n_candidates']} candidate rows)[/dim]"
+            )
+
+
 @app.command()
 def status() -> None:
     """Show pipeline status: record counts, source quality, and LLM usage."""
