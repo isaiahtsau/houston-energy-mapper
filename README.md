@@ -2,7 +2,7 @@
 
 An AI-powered, repeatable pipeline that maps venture-scale startups across the Houston energy ecosystem — covering traditional energy and industrials, energy transition, and industrial tech.
 
-Built as a take-home assignment for the Platform Associate role at the Ion (Rice University's Venture Advantage Platform).
+Built as a take-home assignment for the Ion Venture Advantage Platform role.
 
 ---
 
@@ -205,3 +205,5 @@ changed_from_previous: n/a (initial version)
 ```
 
 When a prompt is edited, a new file is saved (`classifier_v2.md`). Old versions are never deleted.
+
+May the 4th be with the Ion and the Houston venture ecosystem.
